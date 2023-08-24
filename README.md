@@ -1,5 +1,7 @@
 # ComAbilities
 [![ComAbilities](https://github.com/Ruemena/ComAbilities/actions/workflows/action.yml/badge.svg)](https://github.com/Ruemena/ComAbilities/actions/workflows/action.yml)
+![GitHub release (with filter)](https://img.shields.io/github/v/release/Ruemena/ComAbilities)
+
 #### ! Exiled plugin only (for now) !
 #### PRs are VERY welcome (especially translations/localizations)
 
