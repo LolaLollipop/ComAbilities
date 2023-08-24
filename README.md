@@ -1,5 +1,7 @@
 # ComAbilities
 [![ComAbilities](https://github.com/Ruemena/ComAbilities/actions/workflows/action.yml/badge.svg)](https://github.com/Ruemena/ComAbilities/actions/workflows/action.yml)
+
+ComAbilities is a large expansion for SCP-079, adding new abilities, balance changes, and other features and quirks designed to make him both more enjoyable and more fun to play against. It's highly configurable and modular, allowing for you to pick and choose what features you would like.
 #### Planned features
 - [ ] Flash Cannon
 - [ ] Shooting cameras
