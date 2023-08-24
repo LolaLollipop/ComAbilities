@@ -5,9 +5,9 @@
 - [ ] Shooting cameras
 - [ ] Generators causing weird effects in the facility
 ## Exhaustive list of features
-
+### Localizer
+ComAbilities comes prepackaged with a localizer, allowing for the text within the plugin to be modified easily. Language files are generated when the plugin is first run (default localizations will be used), in the EXILED configs folder. The current language file in use can be configured by changing the `Localization` config - for example, `English` will set the current localization file to be `English.yml`. The .yml files inside the folder can be modified freely.
 ### Abilities
-
 #### Reality Scrambler
 While active, the Reality Scrambler regenerates the Hume Shield of all SCPs, regardless of whether or not they are taking damage. However, it drains Aux Power and prevents regeneration of it. 
 <details closed>
