@@ -13,6 +13,8 @@ ComAbilities is a large expansion for SCP-079, adding new abilities, balance cha
 ## Exhaustive list of features
 #### Table of Contents
 - [Localizer](#Localizer)
+- [Abilities](#Abilities)
+  - [Reality Scrambler](#Reality-Scrambler)
 ### Localizer
 ComAbilities comes prepackaged with a localizer, allowing for the text within the plugin to be modified easily. language files are generated when the plugin is first run (default localizations will be used), in the EXILED configs folder. the current language file in use can be configured by changing the `Localization` config - for example, `English` will set the current localization file to be `English.yml`. the .yml files inside the folder can be modified freely.
 ### Abilities
