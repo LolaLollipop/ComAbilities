@@ -23,6 +23,9 @@ ComAbilities comes prepackaged with a localizer, allowing for the text within th
 ### Access Level Permissions
 this allows for you to give different keycard permissions to 079's levels. this makes it so that 079 can't open/close/lock these doors without the required level. for example, you can restrict science tier 2 to level 3, making it so he can't open up 096's chamber. candy room, etc without that level.
 
+### Anti "Decontamination Locking"
+this allows for you to lock all doors open when the countdown to lcz decontamination begins, making it so that 079 can't lock people out of escaping
+
 ### Abilities
 
 #### Reality Scrambler
