@@ -47,6 +47,9 @@ namespace ComAbilities.Abilities
 
         private PeriodicTask _hologramTask => new(_config.Length, 1f, UpdateText, ChangeBack);
 
+        private ushort _broadcastTime { get; } = 3;
+        private int _timeUntilExpire { get; } = 5;
+
         public void Trigger(HologramRoleConfig roleConfig)
         {
 
@@ -94,7 +97,7 @@ namespace ComAbilities.Abilities
                 _hologramTask.Run();
                 _cooldown.Start(CooldownLength);
 
-                Exiled.API.Features.Broadcast bc = new(GetHologramText(roleConfig.Role), 3, true, Broadcast.BroadcastFlags.Normal);
+                Exiled.API.Features.Broadcast bc = new(GetHologramText(roleConfig.Role), _broadcastTime, true, Broadcast.BroadcastFlags.Normal);
                 player.Broadcast(bc, true);
                 player.ChangeAppearance(roleConfig.Role, false, 0);
             }
@@ -109,9 +112,9 @@ namespace ComAbilities.Abilities
         }
         public void ActivateConfirmation()
         {
-            _expireConfirmation.Start(5);
+            _expireConfirmation.Start(_timeUntilExpire);
         }
-        public void ChangeBack()
+        internal void ChangeBack()
         {
             Player player = this.CompManager.AscPlayer;
             this._cooldown.Start(_config.Cooldown);
@@ -139,10 +142,10 @@ namespace ComAbilities.Abilities
                 this.CompManager.AscPlayer.SessionVariables.Remove(Hologram.SessionVariable);
             });
         }
-        public void UpdateText()
+        internal void UpdateText()
         {
             Log.Debug("Updating");
-            Exiled.API.Features.Broadcast bc = new(GetHologramText(CompManager.AscPlayer.Role), 3, true, Broadcast.BroadcastFlags.Normal);
+            Exiled.API.Features.Broadcast bc = new(GetHologramText(CompManager.AscPlayer.Role), _broadcastTime, true, Broadcast.BroadcastFlags.Normal);
             CompManager.AscPlayer.Broadcast(bc, true);
         }
 
@@ -151,7 +154,7 @@ namespace ComAbilities.Abilities
             CompManager.AscPlayer.SessionVariables.Remove(Hologram.SessionVariable);
         }
 
-        public void OnFinished()
+        private void OnFinished()
         {
         }
 

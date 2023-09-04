@@ -31,7 +31,7 @@ namespace ComAbilities.Types
     {
         AvailableAbilities,
         ActiveAbilities,
-        Error,
+        Message,
         Trackers
     }
     public enum DisplayTypes
@@ -48,5 +48,15 @@ namespace ComAbilities.Types
         Keycard,
         Throw,
         Noclip // not implemented
+    }
+
+    public enum NewHotkeys
+    {
+        Reload,
+        HoldReload,
+        Throw,
+        GunFlashlight,
+        ADS,
+        Noclip
     }
 }

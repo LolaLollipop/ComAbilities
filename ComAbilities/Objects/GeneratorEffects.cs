@@ -18,7 +18,9 @@ namespace ComAbilities.Objects
         public static CoroutineHandle? CH { get; set; }
 
         private static GeneratorEffectsConfigs _config { get; } = ComAbilities.Instance.Config.GeneratorEffectsConfigs;
+
         private static int _lastCount { get; set; } = -1;
+        private static int minTimeUntilExplode { get; set; } = 3;
         public static void Kill()
         {
             if (CH.HasValue)
@@ -53,7 +55,7 @@ namespace ComAbilities.Objects
             if (!_config.AllowKeycardDoors) doors = doors.Where(x => !x.IsKeycardDoor);
 
             while (true) {
-                yield return Timing.WaitForSeconds(Math.Max(random.Next(range.Start.Value, range.End.Value), 3));
+                yield return Timing.WaitForSeconds(Math.Max(random.Next(range.Start.Value, range.End.Value), minTimeUntilExplode));
                 if (_config.FilterAlreadyDestroyed) doors = doors.Where(x => (x is IDamageableDoor door) && !door.IsDestroyed);
 
                 if (doors.Count() == 0)

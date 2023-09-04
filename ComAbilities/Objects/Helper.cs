@@ -14,6 +14,9 @@ using UnityEngine;
 
 namespace ComAbilities.Objects
 {
+    /// <summary>
+    /// Helper functions
+    /// </summary>
     internal static class Helper
     {
 
@@ -56,7 +59,7 @@ namespace ComAbilities.Objects
         }
         public static string GetCleanText(string text)
         {
-            string cleanText = text.Replace("</noparse>", "</nopa​rse>"); // NOTE: a zero width space is inserted
+            string cleanText = text.Replace("</noparse>", "</nopa​rse>"); // zero width space is inserted
             return $"<noparse>{cleanText}</noparse>";
         }
         public static Player[] GetSCPs()

@@ -42,8 +42,9 @@ namespace Exiled.ComAbilitiesEvents
             if (newAbilities.Any())
             {
                 StringBuilder sb = new();
-                sb.Append("<size=50%>");
-                sb.Append(Instance.Localization.Shared.LevelUpUnlockedAbilities + "\n");
+                sb.Append("<size=65%>");
+                sb.Append(Instance.Localization.Shared.LevelUpUnlockedAbilities);
+                sb.Append("</size>\n<size=50%>");
                 foreach (Ability ability in newAbilities)
                 {
                     string formatted = string.Format(Instance.Localization.Shared.UnlockedAbilityFormat, ability.Name, ability.Description);

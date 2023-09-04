@@ -15,8 +15,14 @@ using Utf8Json.Resolvers.Internal;
 
 namespace ComAbilities.Types
 {
+    /// <summary>
+    /// Allows for easy cooldowns and timed waits
+    /// </summary>
     public class Cooldown
     {
+        /// <summary>
+        /// Whether or not the cooldown is active
+        /// </summary>
         public bool Active => IsActive();
 
         private DateTimeOffset? _startedAt { get; set; }

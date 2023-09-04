@@ -79,7 +79,7 @@ namespace ComAbilities.Types
                 };
                 // <color=#XXXXX> [ (1) CI RIFLEMAN : PRIMARYFIREARM KEY ]
 
-                string trackerString = $"<color={color}[ ({i}) {role} : {tracker.hotkey.ToString().ToUpper()} KEY]</color>";
+                string trackerString = $"\n<color={color}[ ({i}) {role} : {tracker.hotkey.ToString().ToUpper()} KEY]</color>";
                 if (SelectedTracker == i)
                 {
                     trackerString = $"> <b>{trackerString}</b> <";

@@ -41,7 +41,7 @@ namespace ComAbilities.Abilities
         public override bool Enabled => _config.Enabled;
         public float AuxModifier { get; } = _config.AuxMultiplier;
 
-        public AllHotkeys HotkeyButton { get; } = _config.Hotkey;
+        public AllHotkeys HotkeyButton { get; } = AllHotkeys.Grenade;
 
         public float CooldownLength { get; } = _config.Cooldown;
         public bool OnCooldown => _cooldown.Active;
@@ -50,12 +50,13 @@ namespace ComAbilities.Abilities
 
         private Cooldown _cooldown { get; } = new();
 
+        private static int _minTimeToStop { get; } = 0;
 
         // --------------------
 
         public void Trigger()
         {
-            if (IsActive && _cooldown.RunningFor() > 1500) // 3 seconds
+            if (IsActive && _cooldown.RunningFor() > _minTimeToStop) // 3 seconds
             {
                 IsActive = false;
                 ActiveScanners.Remove(CompManager.Role!.Base);

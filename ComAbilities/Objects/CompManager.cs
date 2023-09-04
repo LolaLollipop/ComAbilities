@@ -8,23 +8,24 @@ namespace ComAbilities.Objects
     using Exiled.API.Features.Roles;
     using System.Text;
 
+    /// <summary>
+    /// Manages all plugin-related things for a certain player
+    /// </summary>
     public sealed class CompManager
     {
         private readonly ComAbilities Instance = ComAbilities.Instance;
         public Player AscPlayer { get; private set; }
-        public Scp079Role? Role { get => AscPlayer.Role as Scp079Role; }
+        public Scp079Role? Role => AscPlayer.Role as Scp079Role;
 
         public List<Ability> AbilityInstances { get; private set; } = new();
-        public Dictionary<AllHotkeys, Ability> Hotkeys { get; private set; } = new();
         public DisplayManager<DisplayTypes, Elements> DisplayManager { get; private set; }
+        private HotkeyModule HotkeyModule { get; set; } = new();
             
         public List<IReductionAbility> ActiveAbilities { get; private set; } = new();
 
-
-
         private float RateLimit { get; } = 4;
         private Cooldown _errorCooldown { get; } = new(); // Global error ratelimit
-        private UpdateTask _errorTask { get; }
+        private UpdateTask _messageTask { get; }
 
         // abilities    
         public RealityScrambler RealityScrambler { get; }
@@ -35,6 +36,9 @@ namespace ComAbilities.Objects
         public RadioScanner RadioScanner { get; }
         public BroadcastMsg BroadcastMessage { get; }
 
+
+        private int _timeToShowMessages { get; } = 5;
+
         // constructor
         public CompManager(Player player)
         {
@@ -42,41 +46,32 @@ namespace ComAbilities.Objects
             this.DisplayManager = new(player);
             this.AscPlayer = player;
 
-            _errorTask = new(5f, () =>
+            _messageTask = new(_timeToShowMessages, () =>
             {
-                DisplayManager.SetElement(Elements.Error, " ");
+                DisplayManager.SetElement(Elements.Message, " ");
             });
 
 
             Log.Debug("Creating ability instances");
             this.RealityScrambler = RegisterAbility<RealityScrambler>();
-            this.DistressSignal = new(this);
-            this.Hologram = new(this);
-            this.PlayerTracker = new(this);
-            this.GoTo = new(this);
+            this.DistressSignal = RegisterAbility<DistressSignal>();
+            this.Hologram = RegisterAbility<Hologram>();
+            this.PlayerTracker = RegisterAbility<PlayerTracker>();
+            this.GoTo = RegisterAbility<GoTo>();
             this.RadioScanner = RegisterAbility<RadioScanner>();
-            this.BroadcastMessage = new(this);
-
-            Log.Debug("Adding instances to array");
-          //  AddIfEnabled(AbilityInstances, RealityScrambler);
-            AddIfEnabled(AbilityInstances, DistressSignal);
-            AddIfEnabled(AbilityInstances, Hologram);
-            AddIfEnabled(AbilityInstances, PlayerTracker);
-            AddIfEnabled(AbilityInstances, GoTo);
-
-            Log.Debug("Registering hotkeys");
-          //  AddIfEnabled(Hotkeys, Instance.Config.RealityScrambler.Hotkey, RealityScrambler);
-            AddIfEnabled(Hotkeys, Instance.Config.PlayerTracker.Hotkey, PlayerTracker);
+            this.BroadcastMessage = RegisterAbility<BroadcastMsg>();
 
             this.DisplayManager
-                .CreateElement(Elements.AvailableAbilities, out Element? _, 12)
-                .CreateElement(Elements.Error, out Element? _, 1)
-                .CreateElement(Elements.Trackers, out Element? _, 6);
+                .CreateElement(Elements.AvailableAbilities, out Element? _, 10)
+                .CreateElement(Elements.Message, out Element? _, 1)
+                .CreateElement(Elements.Trackers, out Element? _, 6)
+                .CreateElement(Elements.ActiveAbilities, out Element? _, 7);
+                
 
             Log.Debug("Registering UI");
             this.DisplayManager.AddScreen(DisplayTypes.Main)
                 .AddString("<align=center><voffset=-3em><b><color=#801919><size=50%>")
-                .AddElement(Elements.Error, 1)
+                .AddElement(Elements.Message, 1)
                 .AddString("</size></color></b></voffset></align>")
                 .AddString("<align=right><size=50%><line-height=120%><voffset=-5em><color=#adadad>")
                 .AddElement(Elements.AvailableAbilities, 12)
@@ -84,9 +79,9 @@ namespace ComAbilities.Objects
 
             this.DisplayManager.AddScreen(DisplayTypes.Tracker)
                 .AddString("\n<align=center><voffset=-5em><b><color=#801919><size=50%>")
-                .AddElement(Elements.Error, 1)
+                .AddElement(Elements.Message, 1)
                 .AddString("</size></color></b></voffset></align>")
-                .AddString("<size=50%><align=center><voffset=-7em>PLAYER TRACKER<br>SELECT A SLOT TO BEGIN TRACKING")
+                .AddString("<size=50%><align=center><line-height=20%><voffset=-7em>PLAYER TRACKER<br>SELECT A SLOT TO BEGIN TRACKING")
                 .AddElement(Elements.Trackers, 6)
                 .AddString("</color></voffset></size></align></line-height>");
 
@@ -94,8 +89,7 @@ namespace ComAbilities.Objects
             Log.Debug("All done");
         }
 
-        private T RegisterAbility<T>()
-            where T : Ability
+        private T RegisterAbility<T>() where T : Ability
         {
             T ability = (T)Activator.CreateInstance(typeof(T), this);
             if (!ability.Enabled) return ability;
@@ -103,7 +97,8 @@ namespace ComAbilities.Objects
             AbilityInstances.Add(ability);
             if (ability is IHotkeyAbility asHotkey)
             {
-                Hotkeys.Add(asHotkey.HotkeyButton, ability);
+                
+                HotkeyModule.Register(asHotkey);
             }
             return ability;
         }
@@ -122,6 +117,13 @@ namespace ComAbilities.Objects
             }
         }
 
+        public void HandleInput(NewHotkeys hotkey)
+        {
+            if (Role == null) return;
+
+            if (Guards.SignalLost(Role)) { return; }
+
+        }
         public void KillAll()
         {
             Log.Debug("Cleaning up");
@@ -130,9 +132,6 @@ namespace ComAbilities.Objects
                 ability.KillTasks();
             }
             this.ActiveAbilities.Clear();
-            this.RealityScrambler.KillTasks();
-            this.DistressSignal.KillTasks();
-            this.Hologram.KillTasks();
 
             //this.DisplayManager.CleanUp();
         }
@@ -147,34 +146,11 @@ namespace ComAbilities.Objects
         {
             if (!_errorCooldown.Active)
             {
-                DisplayManager.SetElement(Elements.Error, errorString);
+                DisplayManager.SetElement(Elements.Message, errorString);
                 DisplayManager.Update();
 
                 _errorCooldown.Start(RateLimit);
-                _errorTask.Run();
-            }
-        }
-
-        public void AddAbility(IReductionAbility ability)
-        {
-            if (ability is IReductionAbility)
-            {
-                ActiveAbilities.Add(ability);
-            }
-            else
-            {
-                throw new Exception("Not a toggleable ability");
-            }
-        }
-        public void RemoveAbility(IReductionAbility ability)
-        {
-            if (ability is IReductionAbility)
-            {
-                ActiveAbilities.Remove(ability);
-            }
-            else
-            {
-                throw new Exception("Not a toggleable ability");
+                _messageTask.Run();
             }
         }
 
@@ -229,6 +205,7 @@ namespace ComAbilities.Objects
             float regenSpeed = role.EnergyRegenerationSpeed;
             return (float)Math.Max(0.5, (role.Energy - cost) / regenSpeed);
         }
+
     }
 
 }

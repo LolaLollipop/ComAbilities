@@ -95,12 +95,13 @@ namespace ComAbilities.Abilities
             sb.Append(_trackers.ConvertToHintString());
 
             if (_trackers.GetState(_trackers.SelectedTracker) == TrackerState.Selected) 
-                sb.Append("<br>" + TrackerT.SelectedEmpty);
+                sb.Append("\n" + TrackerT.SelectedEmpty);
 
             if (_trackers.GetState(_trackers.SelectedTracker) == TrackerState.SelectedFull) 
-                sb.Append("<br>" + TrackerT.SelectedFull);
+                sb.Append("\n" + TrackerT.SelectedFull);
 
-            sb.Append("<br>" + TrackerT.CloseMessage);
+            sb.Append("\n" + TrackerT.CloseMessage);
+
             CompManager.DisplayManager.SetElement(Elements.Trackers, sb.ToString());
             CompManager.DisplayManager.Update(DisplayTypes.Tracker);
         }

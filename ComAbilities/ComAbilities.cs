@@ -13,9 +13,7 @@
 #pragma warning disable CS8625
     public sealed class ComAbilities : Plugin<Config>
     {
-        private ComAbilities()
-        {
-        }
+        private ComAbilities() { }
 
         private PlayerHandler playerHandler;
         private ServerHandler serverHandler;
@@ -29,7 +27,7 @@
         public override PluginPriority Priority { get; } = PluginPriority.Last;
 
         private string LocalizationsURL { get; } = "https://github.com/Ruemena/ComAbilities/raw/main/Localizations.zip";
-        private string LocalizationPath { get; } = $"{Paths.Configs}/{Server.Port}-ComAbilities_Localizations";
+        private string LocalizationPath => $"{Paths.Configs}/{Server.Port}-ComAbilities_Localizations";
         private Version LocalizationVersion { get; } = new(1, 0, 0);
 
         private static readonly ComAbilities Singleton = new();
@@ -64,9 +62,13 @@
             Exiled.Events.Handlers.Player.InteractingDoor += this.playerHandler.OnInteractingDoor;
             Exiled.Events.Handlers.Player.ChangingRole += playerHandler.OnChangingRole;
             Exiled.Events.Handlers.Player.ChangingItem += playerHandler.OnChangingItem;
-            Exiled.Events.Handlers.Player.DroppingItem += playerHandler.OnDroppingItem;
             Exiled.Events.Handlers.Player.Left += playerHandler.OnLeft;
             Exiled.Events.Handlers.Player.Spawning += playerHandler.OnSpawning;
+
+            Exiled.Events.Handlers.Player.DroppingItem += playerHandler.OnDroppingItem;
+            Exiled.Events.Handlers.Player.TogglingWeaponFlashlight += playerHandler.OnTogglingWeaponFlashlight;
+            Exiled.Events.Handlers.Player.UnloadingWeapon += playerHandler.OnUnloadingWeapon;
+            Exiled.Events.Handlers.Player.ReloadingWeapon += playerHandler.OnReloadingWeapon;
 
             Exiled.Events.Handlers.Player.ActivatingWarheadPanel += this.playerHandler.DenyHologram;
             Exiled.Events.Handlers.Player.StoppingGenerator += playerHandler.DenyHologram;

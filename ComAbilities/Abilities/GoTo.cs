@@ -27,7 +27,6 @@ namespace ComAbilities.Abilities
     {
         private readonly static ComAbilities Instance = ComAbilities.Instance;
 
-
         private static GoToT GoToT => Instance.Localization.GoTo;
         private static GoToScpConfig _config => Instance.Config.GoToScp;
         public GoTo(CompManager compManager) : base(compManager) { }

@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace ComAbilities.Objects
 {
-    public static class Guards
+    internal static class Guards
     {
         private static readonly ComAbilities Instance = ComAbilities.Instance;
         private static ErrorsT Errors => Instance.Localization.Errors;

@@ -36,8 +36,6 @@ namespace ComAbilities.Commands
         public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
         {
             Player player = Player.Get(sender);
-           // MessageTooLong
-            response = "";
             if (Guards.NotEnabled(_config, out response)) return false;
             if (Guards.NotComputer(player.Role, out response)) return false;
 
@@ -56,6 +54,7 @@ namespace ComAbilities.Commands
                 response = BroadcastMessageT.NoMessageProvided;
                 return false;
             }
+
             bc.Trigger(string.Join(" ", arguments));
             response = string.Format(BroadcastMessageT.Success, _config.Cooldown);
             return true;

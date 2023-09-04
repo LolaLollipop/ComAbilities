@@ -35,6 +35,9 @@ namespace ComAbilities.Types
 
        // void Toggle(params object[] args);
     }
+    /// <summary>
+    /// Base class for abilities
+    /// </summary>
     public abstract class Ability//<T>
       //  where T: struct
     {
@@ -60,31 +63,10 @@ namespace ComAbilities.Types
         {
             return currentAux >= this.AuxCost;
         }
-
-        public bool DidError(Player player, IAbilityConfig config, out string response)
-        {
-            if (config.Enabled == false)
-            {
-                response = "Not enabled";
-                return true;
-            }
-            if (player.Role != RoleTypeId.Scp079)
-            {
-                response = "You must be SCP-079 to use this command.";
-                return true;
-            }
-            Scp079Role role = player.Role.As<Scp079Role>();
-
-            if (role.IsLost)
-            {
-                response = "- SIGNAL LOST -";
-                return true;
-            }
-            response = "";
-            return false;
-
-        }
      // public abstract void Trigger(T value);
+        /// <summary>
+        /// Cleans up the ability, removing any floating tasks
+        /// </summary>
         public abstract void KillTasks();
     }
 }

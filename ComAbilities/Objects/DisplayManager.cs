@@ -13,8 +13,13 @@ using System.Threading.Tasks;
 using UnityEngine;
 using Utf8Json.Resolvers.Internal;
 
+
+/// Handles 
 namespace ComAbilities.Objects
 {
+    /// <summary>
+    /// Used to display multiple things at a time
+    /// </summary>
     public class Element
     {
         private string? _content;

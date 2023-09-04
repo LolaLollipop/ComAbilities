@@ -6,6 +6,8 @@
     using ComAbilities.Types;
     using Exiled.API.Enums;
     using Exiled.API.Features;
+    using Exiled.API.Features.Items;
+    using Exiled.API.Structs;
     using Exiled.Events.EventArgs.Interfaces;
     using Exiled.Events.EventArgs.Player;
     using HarmonyLib;
@@ -43,9 +45,7 @@
         public void OnChangingItem(ChangingItemEventArgs ev)
         {
             if (ev.Player == null || ev.Player.Role == null) return;
-            
-            Log.Debug("Caught");
-            
+
             if (ev.Player.Role == RoleTypeId.Scp106 && ev.Player.SessionVariables.ContainsKey(Hologram.SessionVariable))
             {
                 if (ev.Item.Type != ItemType.Medkit) return;
@@ -61,7 +61,7 @@
             }
             if (ev.Player.Role == RoleTypeId.Scp079)
             {
-                Scp079Role role = ev.Player.Role.Cast<Scp079Role>();
+               /* Scp079Role role = ev.Player.Role.Cast<Scp079Role>();
                 if (Guards.SignalLost(role)) { ev.IsAllowed = false; return; }
                 CompManager compManager = Instance.CompDict.GetOrError(ev.Player);
 
@@ -80,7 +80,7 @@
                     compManager.PlayerTracker.HandleInputs(hotkey);
                     return;
                 }
-                if (hotkey == null || !compManager.Hotkeys.TryGetValue(hotkey.Value, out Ability ability)) return;
+                if (hotkey == null || !compManager.Hotkey.TryGetValue(hotkey.Value, out Ability ability)) return;
                 if (ability is ICooldownAbility rateLimitedAbility)
                 {
                     if (Guards.OnCooldown(rateLimitedAbility, out string errorCooldown)) {
@@ -97,18 +97,7 @@
                 }
                 IHotkeyAbility? hotkeyAbility = ability as IHotkeyAbility;
                 hotkeyAbility?.Trigger();
-                ev.IsAllowed = false;
-            }
-        }
-
-        public void OnDroppingItem(DroppingItemEventArgs ev)
-        {
-            if (ev.Player.Role == RoleTypeId.Scp079 && ev.IsThrown)
-            {
-                CompManager compManager = Instance.CompDict.GetOrError(ev.Player);
-
-                IHotkeyAbility hotkeyTracker = compManager.PlayerTracker;
-                hotkeyTracker.Trigger();
+                ev.IsAllowed = false; */
             }
         }
 
@@ -135,7 +124,7 @@
                 Instance.CompDict.Remove(ev.Player);
             }
         }
-        
+
         public void OnChangingRole(ChangingRoleEventArgs ev)
         {
             if (ev.Player == null || ev.Player.Role == null) return;
@@ -162,8 +151,8 @@
         {
             ImageGenerator gen = ImageGenerator.ZoneGenerators.First();
             List<ImageGenerator.MinimapElement>? minimap = Traverse.Create(gen).Field("minimap").GetValue() as List<ImageGenerator.MinimapElement>;
-          //  Hint hint = new(sb.ToString(), 5000);
-          //  ev.Player.ShowHint(hint);
+            //  Hint hint = new(sb.ToString(), 5000);
+            //  ev.Player.ShowHint(hint);
             if (ev.Player == null || ev.Player.Role == null) return;
             if (ev.Player.Role == RoleTypeId.Scp106 && ev.Player.SessionVariables.ContainsKey(Hologram.SessionVariable))
             {
@@ -171,15 +160,13 @@
             }
             if (ev.Player.Role == RoleTypeId.Scp079)
             {
-                Traverse.Create(typeof(Scp079IntroCutscene)).Field("IsPlaying").SetValue(false);
                 Timing.CallDelayed(15, () =>
                 {
 
-                    ev.Player.AddItem(ItemType.KeycardJanitor);
-                    ev.Player.AddItem(ItemType.GrenadeFlash);
-                    ev.Player.AddItem(ItemType.Painkillers);
-                    ev.Player.AddItem(ItemType.GunCOM15);
-                    ev.Player.AddItem(ItemType.GunCOM18);
+                    Firearm gun = (Firearm)Item.Create(ItemType.GunCOM15);
+                    gun.AddAttachment(InventorySystem.Items.Firearms.Attachments.AttachmentName.Flashlight);
+                    ev.Player.AddItem(gun);
+                    ev.Player.CurrentItem = gun;
                 });
             }
         }
@@ -217,7 +204,13 @@
             }
         }
 
-        public void DenyHologram<T>(T ev)
+        public void OnReloadingWeapon(ReloadingWeaponEventArgs ev) => ReceiveInput(ev, NewHotkeys.Reload);
+        public void OnUnloadingWeapon(UnloadingWeaponEventArgs ev) => ReceiveInput(ev, NewHotkeys.HoldReload);
+        public void OnTogglingWeaponFlashlight(TogglingWeaponFlashlightEventArgs ev) => ReceiveInput(ev, NewHotkeys.GunFlashlight);
+        public void OnDroppingItem(DroppingItemEventArgs ev) { if (ev.IsThrown) ReceiveInput(ev, NewHotkeys.GunFlashlight); }
+
+
+        internal void DenyHologram<T>(T ev)
         where T : IDeniableEvent, IPlayerEvent
         {
             if (ev.Player == null || ev.Player.Role == null) return;
@@ -226,6 +219,14 @@
             {
                 ev.IsAllowed = false;
             }
+        }
+        internal void ReceiveInput<T>(T ev, NewHotkeys hotkey)
+        where T: IDeniableEvent, IPlayerEvent
+        {
+            if (ev.Player.Role != RoleTypeId.Scp079) return;
+            CompManager compManager = Instance.CompDict.GetOrError(ev.Player);
+            compManager.HandleInput(hotkey);
+            ev.IsAllowed = false; 
         }
     }
 }

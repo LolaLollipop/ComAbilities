@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 
 namespace ComAbilities.Objects
 {
+    /// <summary>
+    /// Dictionary wrapper that stores Players and CompManagers
+    /// </summary>
     public class CompDict
     {
         private readonly static ComAbilities Instance = ComAbilities.Instance;
@@ -28,21 +31,13 @@ namespace ComAbilities.Objects
             _playerComputers[key].KillAll();
             _playerComputers.Remove(key);
         }
-        public bool Contains(Player key)
-        {
-            return _playerComputers.ContainsKey(key);
-        }
+        public bool Contains(Player key) => _playerComputers.ContainsKey(key);
         public CompManager? Get(Player key)
         {
             CompManager comp = _playerComputers[key];
             return _playerComputers[key];
         }
-        public bool TryGet(Player key, out CompManager? compManager)
-        {
-            CompManager comp = _playerComputers[key];
-            compManager = comp;
-            return _playerComputers is not null;
-        }
+        public bool TryGet(Player key, out CompManager compManager) => _playerComputers.TryGetValue(key, out compManager);
         public CompManager GetOrError(Player key)
         {
             CompManager comp = _playerComputers[key];
@@ -50,20 +45,14 @@ namespace ComAbilities.Objects
             return _playerComputers[key];
         }
 
-        public void Add(Player key)
-        {
-            _playerComputers.Add(key, new CompManager(key));
-        }
+        public void Add(Player key) => _playerComputers.Add(key, new CompManager(key));
 
         public CompManager AddReturn(Player key)
         {
             _playerComputers.Add(key, new CompManager(key));
             return _playerComputers[key];
         }
-        public List<CompManager> All()
-        {
-            return _playerComputers.Values.ToList();
-        }
+        public List<CompManager> All() => _playerComputers.Values.ToList();
     }
 
 }

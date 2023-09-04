@@ -49,29 +49,29 @@
     }
     public sealed class GeneratorEffectsConfigs
     {
-        public bool DoDoorExploding = true;
-        public bool AllowKeycardDoors = false;
-        public bool FilterAlreadyDestroyed = true;
+        public bool DoDoorExploding { get; set; } = true;
+        public bool AllowKeycardDoors { get; set; } = false;
+        public bool FilterAlreadyDestroyed { get; set; } = true;
        // public bool FilterCannotDestroy = true;
-        public Dictionary<int, Range> DoorExplodeInterval = new()
+        public Dictionary<int, Range> DoorExplodeInterval { get; set; } = new()
         {
             { 1, new Range(40, 60) },
             { 2, new Range(25, 40) },
             { 3, new Range(15, 25) },
         };
-        public List<DoorType> BlacklistedDoors = new()
+        public List<DoorType> BlacklistedDoors { get; set; } = new()
         {
             DoorType.PrisonDoor
         };
     }
     public sealed class BalanceConfigs
     {
-        public Dictionary<RoomName, float> BlackoutCooldowns = new()
+        public Dictionary<RoomName, float> BlackoutCooldowns { get; set; } = new()
         {
             { RoomName.Outside, 10 },
             { RoomName.Hcz106, 2 },
         };
-        public Dictionary<int, float> RegenMultipliers = new()
+        public Dictionary<int, float> RegenMultipliers { get; set; } = new()
         {
             { 1, 1.2f },
             { 2, 1.1f },
@@ -92,8 +92,8 @@
         public float AuxMultiplier { get; set; } = 0.75f;
         public AllHotkeys Hotkey { get; set; } = AllHotkeys.Throw;
         public bool TrackTutorials { get; set; } = true;
-        public float GoToCost { get; set; } = 40;
-        public float GoToCooldown { get; set; } = 40;
+        public float GoToCost { get; set; } = 40f;
+        public float GoToCooldown { get; set; } = 40f;
     }
     public sealed class HologramConfig : IAbilityConfig
     {
