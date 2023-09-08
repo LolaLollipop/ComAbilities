@@ -74,7 +74,7 @@ namespace ComAbilities.Patches
             };
             newInstructions.InsertRange(index, collection);
 
-            newInstructions[^1].labels.Add(returnLabel);
+            newInstructions[newInstructions.Count - 1].labels.Add(returnLabel);
 
             foreach (CodeInstruction instruction in newInstructions)
                 yield return instruction;

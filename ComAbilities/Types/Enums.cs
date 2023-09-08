@@ -41,22 +41,11 @@ namespace ComAbilities.Types
     }
     public enum AllHotkeys
     {
-        PrimaryFirearm,
-        SecondaryFirearm,
-        Grenade,
-        Medical,
-        Keycard,
-        Throw,
-        Noclip // not implemented
-    }
-
-    public enum NewHotkeys
-    {
         Reload,
         HoldReload,
         Throw,
         GunFlashlight,
         ADS,
-        Noclip
+        Noclip // not implemented
     }
 }

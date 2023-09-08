@@ -79,11 +79,14 @@
             Exiled.Events.Handlers.Warhead.ChangingLeverStatus += playerHandler.DenyHologram;
             Exiled.Events.Handlers.Warhead.Stopping += playerHandler.DenyHologram;
             Exiled.Events.Handlers.Warhead.Starting += playerHandler.DenyHologram;
+            // Exiled.Events.Handlers.Scp079.LockingDoor
 
-           // Exiled.Events.Handlers.Player.Hurting += this.playerHandler.OnHurting;
+            //  Exiled.Events.Handlers.Scp079.Lock += this.playerHandler.;
+            //Exiled.Events.Handlers.Scp079.LockingDoor += this.playerHandler.OnLockingDoor;
 
             Exiled.Events.Handlers.Scp079.Pinging += this.scp079Handler.OnPinging;
             Exiled.Events.Handlers.Scp079.GainingLevel += scp079Handler.OnGainingLevel;
+         //   Exiled.Events.Handlers.Player.InspectingWeapon += playerHandler.OnInspectingWeapon;
 
             base.OnEnabled();
         }

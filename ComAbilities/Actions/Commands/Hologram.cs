@@ -44,7 +44,7 @@ namespace ComAbilities.Commands
             Hologram holo = comp.Hologram;
 
             List<HologramRoleConfig> roleList = holoConfig.RoleLevels;
-            if (!arguments.Any() || !int.TryParse(arguments[0], out int index))
+            if (!arguments.Any() || !int.TryParse(arguments.First(), out int index))
             {
                 response = GetRoleListString(roleList);
                 return false;

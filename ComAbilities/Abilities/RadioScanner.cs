@@ -41,7 +41,7 @@ namespace ComAbilities.Abilities
         public override bool Enabled => _config.Enabled;
         public float AuxModifier { get; } = _config.AuxMultiplier;
 
-        public AllHotkeys HotkeyButton { get; } = AllHotkeys.Grenade;
+        public AllHotkeys HotkeyButton { get; } = AllHotkeys.HoldReload;
 
         public float CooldownLength { get; } = _config.Cooldown;
         public bool OnCooldown => _cooldown.Active;

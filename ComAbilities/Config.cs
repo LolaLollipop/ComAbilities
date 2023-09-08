@@ -2,12 +2,13 @@
 {
     using System.ComponentModel;
     using Exiled.API.Enums;
+    using Exiled.API.Features.Attributes;
     // using Exiled.API.Enums;
     using Exiled.API.Interfaces;
     using global::ComAbilities.Types;
-    using Interactables.Interobjects.DoorUtils;
     using MapGeneration;
     using PlayerRoles;
+    using UnityEngine;
     using KeycardPermissions = Interactables.Interobjects.DoorUtils.KeycardPermissions;
 
     public sealed class Config : IConfig
@@ -118,7 +119,7 @@
         [Description("Enable reality scrambling, allowing for 079 to regenerate the Hume Shield of other SCPs")]
         public bool Enabled { get; set; } = false;
         [Description("Default key for reality scrambling")]
-        public AllHotkeys Hotkey { get; set; } = AllHotkeys.Medical;
+        public AllHotkeys Hotkey { get; set; } = AllHotkeys.ADS;
         [Description("The level that 079 unlocks reality scrambling")]
         public int Level { get; set; } = 5;
         [Description("The initial aux power cost of reality scrambling")]

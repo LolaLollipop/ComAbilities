@@ -61,8 +61,8 @@ namespace ComAbilities.Abilities
         private UpdateTask _expireTrackerTask => new(30f, UpdateUI);
         //public bool InterfaceActive => CompManager.DisplayManager.SelectedScreen == DisplayTypes.Tracker;
         private TrackerManager _trackers => new() {
-            new ActiveTracker(_config.Length, UpdateUI, ReqLevel, AllHotkeys.PrimaryFirearm),
-            new ActiveTracker(_config.Length, UpdateUI, _config.Slot2Level, AllHotkeys.SecondaryFirearm )
+            new ActiveTracker(_config.Length, UpdateUI, ReqLevel),
+            new ActiveTracker(_config.Length, UpdateUI, _config.Slot2Level)
         };
 
         private Dictionary<AllHotkeys, ActiveTracker> TrackerHotkeys { get; } = new();
@@ -131,7 +131,7 @@ namespace ComAbilities.Abilities
             return true;
         }
 
-        public void HandleInputs(AllHotkeys? hotkey)
+        /*public void HandleInputs(AllHotkeys? hotkey)
         {
             if (!hotkey.HasValue) return;
             switch (hotkey.Value)
@@ -153,6 +153,6 @@ namespace ComAbilities.Abilities
                     }
                     break;
             }
-        }
+        } */
     }
 }

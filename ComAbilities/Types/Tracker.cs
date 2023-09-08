@@ -131,11 +131,10 @@ namespace ComAbilities.Types
         public AllHotkeys hotkey { get; }
 
         private UpdateTask _expireTask { get; }
-        public ActiveTracker(float duration, Action killer, int level, AllHotkeys hotkey)
+        public ActiveTracker(float duration, Action killer, int level)
         {
             _expireTask = new UpdateTask(duration, () => { Player = null; killer(); });
             this.Level = level;
-            this.hotkey = hotkey;
         }
 
         public void Start(Player player)

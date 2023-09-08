@@ -6,12 +6,14 @@ namespace ComAbilities.Objects
     using Exiled.API.Enums;
     using Exiled.API.Features;
     using Exiled.API.Features.Roles;
+    using System.Data;
+    using System.Globalization;
     using System.Text;
 
     /// <summary>
     /// Manages all plugin-related things for a certain player
     /// </summary>
-    public sealed class CompManager
+    public sealed class CompManager : IHotkeyHandler
     {
         private readonly ComAbilities Instance = ComAbilities.Instance;
         public Player AscPlayer { get; private set; }
@@ -19,10 +21,11 @@ namespace ComAbilities.Objects
 
         public List<Ability> AbilityInstances { get; private set; } = new();
         public DisplayManager<DisplayTypes, Elements> DisplayManager { get; private set; }
-        private HotkeyModule HotkeyModule { get; set; } = new();
+      //  private HotkeyModule HotkeyModule { get; set; } = new();
             
         public List<IReductionAbility> ActiveAbilities { get; private set; } = new();
 
+        private Dictionary<AllHotkeys, IHotkeyAbility> _hotkeysDict { get; set; } = new();
         private float RateLimit { get; } = 4;
         private Cooldown _errorCooldown { get; } = new(); // Global error ratelimit
         private UpdateTask _messageTask { get; }
@@ -97,31 +100,13 @@ namespace ComAbilities.Objects
             AbilityInstances.Add(ability);
             if (ability is IHotkeyAbility asHotkey)
             {
-                
-                HotkeyModule.Register(asHotkey);
+
+                _hotkeysDict.Add(asHotkey.HotkeyButton, asHotkey);
             }
             return ability;
         }
-        public void AddIfEnabled(List<Ability> list, Ability ability)
-        {
-            if (ability.Enabled)
-            {
-                list.Add(ability);  
-            }
-        }
-        public void AddIfEnabled<T>(Dictionary<T, Ability> dict, T key, Ability ability)
-        {
-            if (ability.Enabled)
-            {
-                dict.Add(key, ability);
-            }
-        }
 
-        public void HandleInput(NewHotkeys hotkey)
-        {
-            if (Role == null) return;
-
-            if (Guards.SignalLost(Role)) { return; }
+        public void HandleInput(AllHotkeys hotkey) {
 
         }
         public void KillAll()

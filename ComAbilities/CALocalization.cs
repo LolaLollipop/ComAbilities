@@ -32,13 +32,13 @@ namespace ComAbilities.Localizations
 
         public Dictionary<AllHotkeys, string> Hotkeys { get; set; } = new()
         {
-            { AllHotkeys.PrimaryFirearm, "Primary Firearm Key" },
+          /*  { AllHotkeys.PrimaryFirearm, "Primary Firearm Key" },
             { AllHotkeys.SecondaryFirearm, "Secondary Firearm Key" },
             { AllHotkeys.Grenade, "Grenade Key" },
             { AllHotkeys.Medical, "Medical Key" },
             { AllHotkeys.Throw, "Throw Key" },
-            { AllHotkeys.Keycard, "Keycard Key" },
-        };
+            { AllHotkeys.Keycard, "Keycard Key" }, */
+        }; 
 
         public Dictionary<RoleTypeId, string> RoleNames { get; set; } = new()
         {

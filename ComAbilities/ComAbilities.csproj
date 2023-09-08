@@ -29,20 +29,14 @@
 		<Reference Include="Exiled.API">
 			<HintPath>lib/Exiled.API.dll</HintPath>
 		</Reference>
-		<Reference Include="Exiled.Events">
-			<HintPath>lib/Exiled.Events.dll</HintPath>
-		</Reference>
 		<Reference Include="Mirror">
 		  <HintPath>..\..\..\..\Downloads\Master (2)\Mirror.dll</HintPath>
-		</Reference>
-		<Reference Include="Mono.Posix">
-		  <HintPath>..\..\..\..\Downloads\Master (2)\Mono.Posix.dll</HintPath>
 		</Reference>
 		<Reference Include="mscorlib">
 		  <HintPath>..\..\..\..\Downloads\Master (1)\mscorlib.dll</HintPath>
 		</Reference>
 		<Reference Include="Pooling">
-		  <HintPath>..\..\..\..\Downloads\Master (1)\Pooling.dll</HintPath>
+		  <HintPath>..\..\..\..\Downloads\Master (2)\Pooling.dll</HintPath>
 		</Reference>
 		<Reference Include="System.IO.Compression" />
 		<Reference Include="System.Net.Http" />
@@ -54,9 +48,6 @@
 		</Reference>
 		<Reference Include="UnityEngine.PhysicsModule">
 		  <HintPath>..\..\..\..\Downloads\Master (2)\UnityEngine.PhysicsModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.UI">
-		  <HintPath>..\..\..\..\Downloads\Master (1)\UnityEngine.UI.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 

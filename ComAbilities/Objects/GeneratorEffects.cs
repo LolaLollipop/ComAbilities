@@ -55,7 +55,7 @@ namespace ComAbilities.Objects
             if (!_config.AllowKeycardDoors) doors = doors.Where(x => !x.IsKeycardDoor);
 
             while (true) {
-                yield return Timing.WaitForSeconds(Math.Max(random.Next(range.Start.Value, range.End.Value), minTimeUntilExplode));
+                yield return Timing.WaitForSeconds(Math.Max(random.Next(range.Min, range.Max), minTimeUntilExplode));
                 if (_config.FilterAlreadyDestroyed) doors = doors.Where(x => (x is IDamageableDoor door) && !door.IsDestroyed);
 
                 if (doors.Count() == 0)

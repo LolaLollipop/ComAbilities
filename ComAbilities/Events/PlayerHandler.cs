@@ -10,6 +10,7 @@
     using Exiled.API.Structs;
     using Exiled.Events.EventArgs.Interfaces;
     using Exiled.Events.EventArgs.Player;
+    using Exiled.Events.EventArgs.Scp079;
     using HarmonyLib;
     using MapGeneration;
     using MEC;
@@ -204,10 +205,15 @@
             }
         }
 
-        public void OnReloadingWeapon(ReloadingWeaponEventArgs ev) => ReceiveInput(ev, NewHotkeys.Reload);
-        public void OnUnloadingWeapon(UnloadingWeaponEventArgs ev) => ReceiveInput(ev, NewHotkeys.HoldReload);
-        public void OnTogglingWeaponFlashlight(TogglingWeaponFlashlightEventArgs ev) => ReceiveInput(ev, NewHotkeys.GunFlashlight);
-        public void OnDroppingItem(DroppingItemEventArgs ev) { if (ev.IsThrown) ReceiveInput(ev, NewHotkeys.GunFlashlight); }
+
+        //public void OnLockingDoor(LockingDoorEventArgs args) { Log.Debug("SICK!"); args.IsAllowed = false; }
+
+       // public void OnInspectingWeapon(InspectingWeaponEventArgs ev) { Log.Debug("INTERACT!!!!!!!"); ev.IsAllowed = false; }
+
+        public void OnReloadingWeapon(ReloadingWeaponEventArgs ev) => ReceiveInput(ev, AllHotkeys.Reload);
+        public void OnUnloadingWeapon(UnloadingWeaponEventArgs ev) => ReceiveInput(ev, AllHotkeys.HoldReload);
+        public void OnTogglingWeaponFlashlight(TogglingWeaponFlashlightEventArgs ev) => ReceiveInput(ev, AllHotkeys.GunFlashlight);
+        public void OnDroppingItem(DroppingItemEventArgs ev) { if (ev.IsThrown) ReceiveInput(ev, AllHotkeys.GunFlashlight); }
 
 
         internal void DenyHologram<T>(T ev)
@@ -220,7 +226,7 @@
                 ev.IsAllowed = false;
             }
         }
-        internal void ReceiveInput<T>(T ev, NewHotkeys hotkey)
+        internal void ReceiveInput<T>(T ev, AllHotkeys hotkey)
         where T: IDeniableEvent, IPlayerEvent
         {
             if (ev.Player.Role != RoleTypeId.Scp079) return;

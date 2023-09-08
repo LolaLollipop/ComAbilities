@@ -6,34 +6,46 @@ namespace ComAbilities.Objects
     using Exiled.API.Enums;
     using Exiled.API.Features;
     using Exiled.API.Features.Roles;
+    using System.Data;
+    using System.Globalization;
     using System.Text;
 
     /// <summary>
     /// Handles hotkeys for a player
     /// </summary>
-    public sealed class HotkeyModule
+    public abstract class HotkeyModule
     {
         private readonly ComAbilities Instance = ComAbilities.Instance;
 
         private Dictionary<AllHotkeys, IHotkeyAbility> _hotkeysDict { get; set; } = new();
 
-        public struct HotkeyStruct
-        {
-            public IHotkeyAbility a;
-            public Ability b;
-        }
         public void Register(IHotkeyAbility ability)
         {
-
-                _hotkeysDict.Add(ability.HotkeyButton, ability);
+            _hotkeysDict.Add(ability.HotkeyButton, ability);
         }
 
-        public void HandleInput(AllHotkeys hotkey)
+       /* public bool TryHandleInput(AllHotkeys hotkey, out string response)
         {
-            if (_hotkeysDict.TryGetValue(hotkey, out IHotkeyAbility ability)) {
-                ability.Trigger();
+            response = "";
+
+            if (_hotkeysDict.TryGetValue(hotkey, out IHotkeyAbility ability)) return true;
+
+            if (ability is ICooldownAbility rateLimitedAbility)
+            {
+                if (Guards.OnCooldown(rateLimitedAbility, out response))
+                {
+                    //TryShowErrorHint(errorCooldown);
+                    return;
+                }
             }
-        }
+            if (Guards.NotEnoughAuxDisplay(role, ability.AuxCost, out response))
+            {
+                //compManager.TryShowErrorHint(response);
+                return false ;
+            }
+            IHotkeyAbility? hotkeyAbility = ability as IHotkeyAbility;
+            hotkeyAbility?.Trigger();
+        } */
     }
 
 }
