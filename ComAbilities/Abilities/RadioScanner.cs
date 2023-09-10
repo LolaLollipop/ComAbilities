@@ -50,20 +50,19 @@ namespace ComAbilities.Abilities
 
         private Cooldown _cooldown { get; } = new();
 
-        private static int _minTimeToStop { get; } = 0;
+        private const int _minTimeToStop = 500;
 
         // --------------------
 
         public void Trigger()
         {
-            if (IsActive && _cooldown.RunningFor() > _minTimeToStop) // 3 seconds
+            if (IsActive && _cooldown.RunningFor() > _minTimeToStop)
             {
                 IsActive = false;
                 ActiveScanners.Remove(CompManager.Role!.Base);
                 _cooldown.Start(CooldownLength);
                 CompManager.ActiveAbilities.Remove(this);
                 CompManager.DisplayManager.Update();
-
             }
             else
             {

@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using YamlDotNet.Serialization.NodeDeserializers;
 
 namespace Localizer
 {
@@ -18,20 +19,11 @@ namespace Localizer
         public TTranslation CurrentLocalization { get; private set; } = new();
         public string Name { get; set; } = "Plugin";
 
-        public static ISerializer Serializer { get; private set;  } = new SerializerBuilder()
-                    .WithNamingConvention(CamelCaseNamingConvention.Instance)
+        public static ISerializer Serializer => Exiled.Loader.Loader.Serializer;
 
-                    //  .WithTypeInspector(inspector => new NewInfoInspector(inspector))
-                    .WithTypeInspector(inner => new CommentGatheringTypeInspector(inner))
-                    .WithEmissionPhaseObjectGraphVisitor(args => new CommentsObjectGraphVisitor(args.InnerVisitor))
-                    .Build();
+        public static IDeserializer Deserializer => Exiled.Loader.Loader.Deserializer;
 
-        public static IDeserializer Deserializer { get; private set;  } = new DeserializerBuilder()
-                    .WithNamingConvention(YamlDotNet.Serialization.NamingConventions.UnderscoredNamingConvention.Instance)
-                    .IgnoreUnmatchedProperties()
-                    .Build();
-
-
+        //<size=35px><line-height=25px>Hello world<line-height=25px><size=50px>\nHello bad world</size><size=35px><line-height=-25px>\nHello worse world
         public async void Start(string url, string path, string selectedTranslation, Version version)
         {
             Log.SendRaw($"[INFO] [{Name} Localizer] Attempting to download localizations", ConsoleColor.Blue);

@@ -20,7 +20,8 @@ namespace ComAbilities.Objects
         private static GeneratorEffectsConfigs _config { get; } = ComAbilities.Instance.Config.GeneratorEffectsConfigs;
 
         private static int _lastCount { get; set; } = -1;
-        private static int minTimeUntilExplode { get; set; } = 3;
+
+        private const int minTimeUntilExplode = 3;
         public static void Kill()
         {
             if (CH.HasValue)
@@ -31,17 +32,15 @@ namespace ComAbilities.Objects
         }
         public static void Update()
         {
-            Log.Debug("FIRST");
             if (!_config.DoDoorExploding) return;
             int activatedGens = Generator.Get(Exiled.API.Enums.GeneratorState.Engaged).Count();
-            Log.Debug(activatedGens);
+            
             if (activatedGens > 0 && activatedGens != _lastCount)
             {
                 _lastCount = activatedGens;
                 Log.Debug(_config.DoorExplodeInterval.ContainsKey(activatedGens));
                 if (_config.DoorExplodeInterval.TryGetValue(activatedGens, out Range explodeInterval))
                 {
-                    Log.Debug("UPDATING");
                     if (CH.HasValue) Timing.KillCoroutines(CH.Value);
                     CH = Timing.RunCoroutine(DestroyDoors(explodeInterval));   
                 }
@@ -54,8 +53,10 @@ namespace ComAbilities.Objects
             IEnumerable<Door> doors = Door.Get(x => x.IsDamageable && !_config.BlacklistedDoors.Contains(x.Type));
             if (!_config.AllowKeycardDoors) doors = doors.Where(x => !x.IsKeycardDoor);
 
+            var (min, max) = range;
             while (true) {
-                yield return Timing.WaitForSeconds(Math.Max(random.Next(range.Min, range.Max), minTimeUntilExplode));
+
+                yield return Timing.WaitForSeconds(Math.Max(random.Next(min, max), minTimeUntilExplode));
                 if (_config.FilterAlreadyDestroyed) doors = doors.Where(x => (x is IDamageableDoor door) && !door.IsDestroyed);
 
                 if (doors.Count() == 0)

@@ -4,6 +4,7 @@
     using ComAbilities.Abilities;
     using ComAbilities.Objects;
     using ComAbilities.Types;
+    using ComAbilities.UI;
     using Exiled.API.Enums;
     using Exiled.API.Features;
     using Exiled.API.Features.Items;
@@ -150,8 +151,41 @@
 
         public void OnSpawning(SpawningEventArgs ev)
         {
-            ImageGenerator gen = ImageGenerator.ZoneGenerators.First();
-            List<ImageGenerator.MinimapElement>? minimap = Traverse.Create(gen).Field("minimap").GetValue() as List<ImageGenerator.MinimapElement>;
+
+            Timing.CallDelayed(5, () =>
+            {
+                Log.Debug("Showing display");
+                //try
+                //{
+                    PlayerDisplay display = new(ev.Player);
+                    display.CreateElement(-500, "<size=50px><line-height=20px>Player Displayer Example<br>New Lines");
+                    display.CreateElement(-200, "<size=40px>You are looking at an example");
+                    display.CreateElement(-200, "<size=40px>Another eaxmpl e gasp");
+                    display.CreateElement(-700, "<align=left>pmnixls");
+                    Log.Debug("Hi chat");
+                    display.Update();
+          
+                //} catch(Exception e)
+                //{
+                //}
+            });
+            Timing.CallDelayed(10, () =>
+            {
+                Log.Debug("Showing display");
+                //try
+                //{
+                PlayerDisplay display = new(ev.Player);
+                display.CreateElement(-500, "<size=50px><line-height=20px>Player Displayer Example\nNew Lines");
+                // display.CreateElement(-200, "<size=40px>You are looking at an example");
+                display.CreateElement(-200, "<size=40px>You are looking at an example");
+                display.CreateElement(-700, "<align=left>pmnixls");
+                Log.Debug("Hi chat");
+                display.Update();
+
+                //} catch(Exception e)
+                //{
+                //}
+            });
             //  Hint hint = new(sb.ToString(), 5000);
             //  ev.Player.ShowHint(hint);
             if (ev.Player == null || ev.Player.Role == null) return;
@@ -204,12 +238,6 @@
                 }
             }
         }
-
-
-        //public void OnLockingDoor(LockingDoorEventArgs args) { Log.Debug("SICK!"); args.IsAllowed = false; }
-
-       // public void OnInspectingWeapon(InspectingWeaponEventArgs ev) { Log.Debug("INTERACT!!!!!!!"); ev.IsAllowed = false; }
-
         public void OnReloadingWeapon(ReloadingWeaponEventArgs ev) => ReceiveInput(ev, AllHotkeys.Reload);
         public void OnUnloadingWeapon(UnloadingWeaponEventArgs ev) => ReceiveInput(ev, AllHotkeys.HoldReload);
         public void OnTogglingWeaponFlashlight(TogglingWeaponFlashlightEventArgs ev) => ReceiveInput(ev, AllHotkeys.GunFlashlight);

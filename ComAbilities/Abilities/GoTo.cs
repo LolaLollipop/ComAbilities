@@ -42,7 +42,7 @@ namespace ComAbilities.Abilities
 
         public float CooldownLength => _config.Cooldown;
 
-        private Cooldown _cooldown { get; } = new();
+        private readonly Cooldown _cooldown = new();
 
 
         public void Trigger(Player player, GoToType goToType)

@@ -23,8 +23,6 @@ namespace ComAbilities.Abilities
         private static HologramConfig _config => Instance.Config.Hologram;
 
         public Hologram(CompManager compManager) : base(compManager) { }
-
-        public static string SessionVariable { get; } = "ComAbilities_hologram";
         public override string Name { get; } = HologramT.Name;
         public override string Description { get; } = HologramT.Description;
         public override float AuxCost { get; } = 0f;
@@ -40,6 +38,7 @@ namespace ComAbilities.Abilities
         public bool IsActive => _hologramTask.Enabled;
         public bool ConfirmationPressed => _expireConfirmation.Active;
 
+        public const string SessionVariable = "ComAbilities_hologram";
 
         private Cooldown _cooldown { get; } = new();
         public float CooldownLength => _config.Cooldown;
@@ -47,8 +46,8 @@ namespace ComAbilities.Abilities
 
         private PeriodicTask _hologramTask => new(_config.Length, 1f, UpdateText, ChangeBack);
 
-        private ushort _broadcastTime { get; } = 3;
-        private int _timeUntilExpire { get; } = 5;
+        private const ushort _broadcastTime = 3;
+        private const int _timeUntilExpire = 5;
 
         public void Trigger(HologramRoleConfig roleConfig)
         {
@@ -85,6 +84,7 @@ namespace ComAbilities.Abilities
 
                 player.ReferenceHub.transform.localScale = new Vector3(0, 1, 0);
                 player.ChangeAppearance(roleConfig.Role, false, 0);
+
                 if (Vector3.Distance(forward, roomCenter) < Vector3.Distance(backwards, roomCenter))
                 {
                     player.Teleport(forward + offset);
@@ -97,7 +97,7 @@ namespace ComAbilities.Abilities
                 _hologramTask.Run();
                 _cooldown.Start(CooldownLength);
 
-                Exiled.API.Features.Broadcast bc = new(GetHologramText(roleConfig.Role), _broadcastTime, true, Broadcast.BroadcastFlags.Normal);
+                Exiled.API.Features.Broadcast bc = new(GetHologramBroadcastText(roleConfig.Role), _broadcastTime, true, Broadcast.BroadcastFlags.Normal);
                 player.Broadcast(bc, true);
                 player.ChangeAppearance(roleConfig.Role, false, 0);
             }
@@ -145,7 +145,7 @@ namespace ComAbilities.Abilities
         internal void UpdateText()
         {
             Log.Debug("Updating");
-            Exiled.API.Features.Broadcast bc = new(GetHologramText(CompManager.AscPlayer.Role), _broadcastTime, true, Broadcast.BroadcastFlags.Normal);
+            Exiled.API.Features.Broadcast bc = new(GetHologramBroadcastText(CompManager.AscPlayer.Role), _broadcastTime, true, Broadcast.BroadcastFlags.Normal);
             CompManager.AscPlayer.Broadcast(bc, true);
         }
 
@@ -168,7 +168,7 @@ namespace ComAbilities.Abilities
             IEnumerable<float> vals = _config.RoleLevels.Select((val, index) => val.Cost);
             return vals.Max();
         }
-        private string GetHologramText(RoleTypeId role)
+        private string GetHologramBroadcastText(RoleTypeId role)
         {
             // string text = Instance.Config.Hologram.BroadcastText;
 
@@ -181,7 +181,7 @@ namespace ComAbilities.Abilities
             {
                 confirmationMessage = HologramT.CancelMessageBefore;
             }
-            Log.Debug("Trying");
+
             string roleText = $"<color={Helper.RoleColors[role]}>{Instance.Localization.Shared.RoleNames[role]}</color>";
             return string.Format(HologramT.ActiveText, roleText, (int)(_hologramTask.GetETA() ?? 0), confirmationMessage);
         }

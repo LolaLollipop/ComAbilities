@@ -25,6 +25,7 @@ namespace ComAbilities.Types
     {
         public AllHotkeys HotkeyButton { get; }
         public void Trigger(); // no args
+        public float AuxCost { get; }
     }
     public interface IReductionAbility
     {

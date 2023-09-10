@@ -36,7 +36,7 @@ namespace ComAbilities.Commands
             Player player = Player.Get(sender);
             HologramConfig holoConfig = Instance.Config.Hologram;
 
-            Log.Debug("Oh my god I hate my life");
+           
             if (Guards.NotEnabled(holoConfig, out response)) return false;
             if (Guards.NotComputer(player.Role, out response)) return false;
 
@@ -71,13 +71,14 @@ namespace ComAbilities.Commands
         {
             StringBuilder sb = new();
 
+            sb.Append("<color=FFFFFF>"); // white
             sb.Append(HologramT.AvailableHologramRoles);
             for (var i = 0; i < roleList.Count; i++)
             {
                 HologramRoleConfig roleConfig = roleList.ElementAt(i);
                 sb.Append(string.Format(HologramT.HologramRoleFormat, i + 1, roleConfig.Level, SharedT.RoleNames[roleConfig.Role], roleConfig.Cost));
             }
-
+            sb.Append("</color>");
             return sb.ToString();
         }
     }

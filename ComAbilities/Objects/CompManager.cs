@@ -26,8 +26,9 @@ namespace ComAbilities.Objects
         public List<IReductionAbility> ActiveAbilities { get; private set; } = new();
 
         private Dictionary<AllHotkeys, IHotkeyAbility> _hotkeysDict { get; set; } = new();
-        private float RateLimit { get; } = 4;
-        private Cooldown _errorCooldown { get; } = new(); // Global error ratelimit
+
+        private const float RateLimit = 4;
+        private Cooldown _errorCooldown { get; } = new(); 
         private UpdateTask _messageTask { get; }
 
         // abilities    
@@ -107,7 +108,30 @@ namespace ComAbilities.Objects
         }
 
         public void HandleInput(AllHotkeys hotkey) {
+            if (Role == null) return;
+            if (Guards.SignalLost(Role)) return;
 
+            if (DisplayManager.SelectedScreen == DisplayTypes.Tracker)
+            {
+                this.PlayerTracker.HandleInputs(hotkey);
+                return;
+            }
+
+            if (!this._hotkeysDict.TryGetValue(hotkey, out IHotkeyAbility ability)) return;
+
+            if (ability is ICooldownAbility rateLimitedAbility)
+            {
+                if (Guards.OnCooldown(rateLimitedAbility, out string errorCooldown)) {
+                    TryShowErrorHint(errorCooldown);
+                    return;
+                }
+            }
+            if (Guards.NotEnoughAuxDisplay(Role, ability.AuxCost, out string response))
+            {
+                TryShowErrorHint(response);
+                return;
+            }
+            ability.Trigger();
         }
         public void KillAll()
         {
@@ -165,7 +189,7 @@ namespace ComAbilities.Objects
                 DisplayManager.SetElement(Elements.ActiveAbilities, "");
             }
 
-            double regenSpeed = this.Role!.AuxManager.RegenSpeed; // make percent and round to 3 decimal places  (e.g. 0.437108 becomes 43.711%)
+            double regenSpeed = this.Role!.AuxManager.RegenSpeed;
             StringBuilder sb = new();
             sb.Append("<color=#ad251c>");
 
@@ -174,7 +198,7 @@ namespace ComAbilities.Objects
                 sb.Append(Instance.Localization.Shared.NoAuxRegen);
             } else
             {
-                float percent = (float)Math.Round((regenSpeed / Role.AuxManager._regenerationPerTier[Role.Level]) * 100, 3);
+                float percent = (float)Math.Round(regenSpeed / Role.AuxManager._regenerationPerTier[Role.Level] * 100, 3);
                 sb.Append(string.Format(Instance.Localization.Shared.RegenSpeedFormat, percent));
             }
             sb.Append("</color>");

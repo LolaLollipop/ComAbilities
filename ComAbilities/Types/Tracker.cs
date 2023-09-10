@@ -127,7 +127,7 @@ namespace ComAbilities.Types
     {
         public Player? Player { get; private set; }
         public int Level { get; }
-        public bool Enabled => _expireTask.Enabled;
+        public bool Enabled => _expireTask.IsRunning;
         public AllHotkeys hotkey { get; }
 
         private UpdateTask _expireTask { get; }

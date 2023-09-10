@@ -60,4 +60,23 @@ namespace ComAbilities.Commands
             return true;
         }
     }
+    [CommandHandler(typeof(ClientCommandHandler))]
+    public sealed class ShowHint : MonoBehaviour, ICommand
+    {
+        public string Command { get; } = "show-hint";
+        public string[] Aliases { get; } = new[] { "sh" };
+        public string Description { get; } = "Shows a hint to you";
+
+        private readonly static ComAbilities Instance = ComAbilities.Instance;
+
+        public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
+        {
+            Player player = Player.Get(sender);
+
+            Hint hint = new Hint(string.Join(" ", arguments), 5000, true);
+            player.ShowHint(hint);
+            response = "true";
+            return true;
+        }
+    }
 }

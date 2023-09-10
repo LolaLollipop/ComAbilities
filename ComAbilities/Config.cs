@@ -9,6 +9,7 @@
     using MapGeneration;
     using PlayerRoles;
     using UnityEngine;
+    using UnityEngine.Windows;
     using KeycardPermissions = Interactables.Interobjects.DoorUtils.KeycardPermissions;
 
     public sealed class Config : IConfig
@@ -109,6 +110,7 @@
         [Description("How long the hologram lasts before it is finished")]
         public float Length { get; set; } = 20f;
         [Description("A list of all selectable roles, their unlocked level, and their aux cost")]
+        [Range(5, int.MaxValue)]
         public List<HologramRoleConfig> RoleLevels = new()
         {
             new HologramRoleConfig(RoleTypeId.ClassD, 4, 40)
@@ -183,19 +185,7 @@
         public int MaxPlayerNameLength { get; set; } = 10;
     }
 
-    public struct HologramRoleConfig
-    {
-        public RoleTypeId Role;
-        public int Level;
-        public float Cost;
-            
-        public HologramRoleConfig(RoleTypeId role, int level, float cost)
-        {
-            this.Role = role;
-            this.Level = level;
-            this.Cost = cost;
-        }
-    }
+    public record HologramRoleConfig(RoleTypeId Role, int Level, float Cost);
     public interface IAbilityConfig 
     {
         public bool Enabled { get; set; }

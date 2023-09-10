@@ -3,15 +3,6 @@ using MEC;
 
 namespace ComAbilities.Types
 {
-    public struct Range
-    {
-        public int Max { get; }
-        public int Min { get; }
-        public Range(int max, int min)
-        {
-            Max = max;
-            Min = min;
-        }
-
-    }
+    public record Range(int min, int max);
 }
+    

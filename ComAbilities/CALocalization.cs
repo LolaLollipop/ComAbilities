@@ -32,12 +32,12 @@ namespace ComAbilities.Localizations
 
         public Dictionary<AllHotkeys, string> Hotkeys { get; set; } = new()
         {
-          /*  { AllHotkeys.PrimaryFirearm, "Primary Firearm Key" },
-            { AllHotkeys.SecondaryFirearm, "Secondary Firearm Key" },
-            { AllHotkeys.Grenade, "Grenade Key" },
-            { AllHotkeys.Medical, "Medical Key" },
-            { AllHotkeys.Throw, "Throw Key" },
-            { AllHotkeys.Keycard, "Keycard Key" }, */
+            { AllHotkeys.GunFlashlight, "Flashlight" },
+            { AllHotkeys.ADS, "ADS" },
+            { AllHotkeys.Reload, "Reload" },
+            { AllHotkeys.HoldReload, "Hold Reload" },
+            { AllHotkeys.Throw, "Throw" },
+            { AllHotkeys.Noclip, "Noclip" },
         }; 
 
         public Dictionary<RoleTypeId, string> RoleNames { get; set; } = new()
@@ -135,8 +135,9 @@ namespace ComAbilities.Localizations
         public string SelectedTrackerFormat { get; set; } = "> <b>{0}</b> <";
 
         public string SelectedEmpty { get; set; } = "PING PLAYER TO ASSIGN THEM TO THIS SLOT";
-        public string SelectedFull { get; set; } = "PRESS [ GRENADE KEY ] TO DELETE";
-        public string CloseMessage { get; set; } = "PRESS [ MEDICAL KEY ] TO CLOSE MENU";
+        public string SelectedFull { get; set; } = "HOLD [ RELOAD KEY ] TO DELETE";
+        [Description("{0}: hotkey")]
+        public string CloseMessage { get; set; } = "PRESS [ {0} KEY ] TO CLOSE MENU";
     }
 
     public sealed class GoToT : IAbilityLocale

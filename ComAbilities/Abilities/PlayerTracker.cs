@@ -72,11 +72,11 @@ namespace ComAbilities.Abilities
         {
             if (CompManager.DisplayManager.SelectedScreen == DisplayTypes.Tracker)
             {
-                CompManager.DisplayManager.SelectedScreen = DisplayTypes.Main;
+                CompManager.DisplayManager.SetScreen(DisplayTypes.Main);
             }
             else
             {
-                CompManager.DisplayManager.SelectedScreen = DisplayTypes.Tracker;
+                CompManager.DisplayManager.SetScreen(DisplayTypes.Tracker);
             }
         }
 
@@ -131,6 +131,33 @@ namespace ComAbilities.Abilities
             return true;
         }
 
+        public void HandleInputs(AllHotkeys hotkey)
+        {
+            switch (hotkey)
+            {
+                case AllHotkeys.HoldReload:
+                    if (_trackers.SelectedTracker != default && _trackers[_trackers.SelectedTracker].Enabled)
+                    {
+                        _trackers[_trackers.SelectedTracker].ForceEnd();
+                    }
+                    break;
+
+                case AllHotkeys.Reload:
+                    if (_trackers.SelectedTracker == _trackers.Count - 1)
+                    {
+                        _trackers.SelectedTracker = 0;
+                    } else
+                    {
+                        _trackers.SelectedTracker++;
+                    }
+                    UpdateUI();
+                    break;
+                case AllHotkeys.Throw:
+                    CompManager.DisplayManager.SetScreen(DisplayTypes.Main);
+                    CompManager.DisplayManager.Update();
+                    break;
+            }
+        }
         /*public void HandleInputs(AllHotkeys? hotkey)
         {
             if (!hotkey.HasValue) return;

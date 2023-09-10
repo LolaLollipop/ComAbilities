@@ -104,15 +104,23 @@ namespace ComAbilities.Objects
     }
     public class DisplayManager<TScreenName, TElementName>
     {
-        public TScreenName? SelectedScreen;
+        public TScreenName? SelectedScreen { get; private set; }
 
         private Dictionary<TScreenName, Screen<TElementName>> _screens = new();
         private Dictionary<TElementName, Element> _elements = new();
         private Player _player;
         private string cache = string.Empty;
 
+
+        private const float HintRateLimit = 0.6f;
+        private const float SwitchCooldownLength = 0.3f;
+
         private bool _shouldUpdate { get; set; } = false;
-        private UpdateTask _rateLimitTask => new(0.6f, OnRateLimitFinished);
+        private UpdateTask _rateLimitTask => new(HintRateLimit, OnRateLimitFinished);
+
+        private TScreenName? toSwitchScreen;
+        private UpdateTask DelayedSwitch => new(SwitchCooldownLength, () => SetScreen(toSwitchScreen!));
+        private Cooldown SwitchCooldown = new();
 
 
         public DisplayManager(Player player) {
@@ -139,20 +147,21 @@ namespace ComAbilities.Objects
         public void SetScreen(TScreenName screenName)
         {
             if (!_screens.ContainsKey(screenName)) throw new Exception("Invalid screen provided");
+            if (SwitchCooldown.Active)
+            {
+                toSwitchScreen = screenName;
+                DelayedSwitch.Run(SwitchCooldownLength - SwitchCooldown.RunningFor());
+                return;
+            }
             SelectedScreen = screenName;
+            SwitchCooldown.Start(SwitchCooldownLength);
         }
         public void Update(TScreenName screenName)
         {
-            if (_rateLimitTask.IsRunning)
-            {
-                _shouldUpdate = true;
-                return;
-            }
-
             if (SelectedScreen != null) { 
                 if (screenName != null && screenName.Equals(SelectedScreen))
                 {
-                    ShowNewHints();
+                    Update();
                 }
             }
         }
@@ -182,25 +191,6 @@ namespace ComAbilities.Objects
             {
                 ShowNewHints();
             }
-        }
-    }
-    [CommandHandler(typeof(ClientCommandHandler))]
-    public sealed class ShowHint : MonoBehaviour, ICommand
-    {
-        public string Command { get; } = "show-hint";
-        public string[] Aliases { get; } = new[] { "sh" };
-        public string Description { get; } = "Shows a hint to you";
-
-        private readonly static ComAbilities Instance = ComAbilities.Instance;
-
-        public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
-        {
-            Player player = Player.Get(sender);
-
-            Hint hint = new Hint(string.Join(" ", arguments), 5000, true);
-            player.ShowHint(hint);
-            response = "true";
-            return true;
         }
     }
 }

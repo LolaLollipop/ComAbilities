@@ -42,7 +42,7 @@ namespace ComAbilities.Types
 
         public override CoroutineHandle Run(float? time = null)
         {
-            Log.Debug("Yeah");
+            
             Killer = Timing.CallDelayed(time ?? Time, () =>
             {
                 CH?.Kill();
@@ -97,6 +97,7 @@ namespace ComAbilities.Types
 
         public override CoroutineHandle Run(float? time = null)
         {
+            if (CH.HasValue) Timing.KillCoroutines(CH.Value);
             IsRunning = true;
             CH = Timing.CallDelayed(time ?? this.Time, OnEnd);
             return CH.Value;
