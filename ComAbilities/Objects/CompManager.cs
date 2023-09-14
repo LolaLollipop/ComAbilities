@@ -191,6 +191,7 @@ namespace ComAbilities.Objects
 
             double regenSpeed = this.Role!.AuxManager.RegenSpeed;
             StringBuilder sb = new();
+
             sb.Append("<color=#ad251c>");
 
             if (regenSpeed == 0)

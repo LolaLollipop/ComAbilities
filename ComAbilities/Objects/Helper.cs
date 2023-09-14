@@ -1,9 +1,9 @@
 ﻿using ComAbilities.Types;
 using Exiled.API.Enums;
 using Exiled.API.Features;
+using Exiled.API.Features.Roles;
 using Exiled.API.Interfaces;
 using PlayerRoles;
-using PlayerRoles.PlayableScps.Scp079;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,7 +34,7 @@ namespace ComAbilities.Objects
             { RoleTypeId.Scientist, "#FFFF7C" },
             { RoleTypeId.FacilityGuard, "#5B6370" }
         };
-
+        public static string? GetRoleColor(RoleTypeId role) => RoleColors.TryGetValue(role, out var color) ? color : null;
 
 
         public static T? GetClosest<T>(Vector3 position, IEnumerable<T> objects)
@@ -75,13 +75,16 @@ namespace ComAbilities.Objects
         {
             return $"<align=center>Hello world </align>";
         }
-        public static string ErrorNotEnoughAux(Ability ability, Scp079AuxManager auxManager)
+        public static string ErrorNotEnoughAux(Ability ability, PlayerRoles.PlayableScps.Scp079.Scp079AuxManager auxManager)
         {
             return FormatError($"[{ability.Name.ToUpper()}] NOT ENOUGH AUX POWER. ETA: {auxManager.GenerateETA(ability.AuxCost)} SECONDS");
         }
-        public static string? GetRoleColor(RoleTypeId role)
+        public static float GetETA(Scp079Role role, float cost)
         {
-            return RoleColors[role];
+            if (role == null) throw new Exception("No role");
+            if (cost <= role.Energy) return 0.5f;
+            float regenSpeed = role.EnergyRegenerationSpeed;
+            return (float)Math.Max(0.5, (role.Energy - cost) / regenSpeed);
         }
     }
 }

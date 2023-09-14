@@ -25,7 +25,6 @@ namespace ComAbilities.Abilities
         private readonly static ComAbilities Instance = ComAbilities.Instance;
         private readonly static RadioScannerT ScannerT = Instance.Localization.RadioScanner;
 
-
         private static PlayerTrackerConfig _config => Instance.Config.PlayerTracker;
 
         public RadioScanner(CompManager compManager) : base(compManager) { }

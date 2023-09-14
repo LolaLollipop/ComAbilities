@@ -25,14 +25,14 @@ namespace ComAbilities.Abilities
 
         public DistressSignal(CompManager compManager) : base(compManager) { }
 
-        public override string Name => DistressSignalT.Name;
-        public override string Description => DistressSignalT.Description;
-        public override float AuxCost => _config.AuxCost;
-        public override int ReqLevel => _config.Level;
+        public override string Name { get; } = DistressSignalT.Name;
+        public override string Description { get; } = DistressSignalT.Description;
+        public override float AuxCost { get; } = _config.AuxCost;
+        public override int ReqLevel { get; } = _config.Level;
         public override string DisplayText => string.Format(DistressSignalT.DisplayText, AuxCost);
 
         public AllHotkeys hotkeyButton => Instance.Config.RealityScrambler.Hotkey;
-        public override bool Enabled => _config.Enabled;
+        public override bool Enabled { get; } = _config.Enabled;
 
         public float CooldownLength => _config.Cooldown;
         public bool OnCooldown => _cooldown.Active;

@@ -27,14 +27,7 @@ namespace ComAbilities.Abilities
 
         private static PlayerTrackerConfig _config => Instance.Config.PlayerTracker;
 
-        public PlayerTracker(CompManager compManager) : base(compManager)
-        {
-            foreach (var tracker in _trackers)
-            {
-                TrackerHotkeys.Add(tracker.hotkey, tracker);
-            }
-        }
-        // --------------------
+        public PlayerTracker(CompManager compManager) : base(compManager) { }
         public override string Name { get; } = TrackerT.Name;
         public override string Description { get; } = TrackerT.Description;
        // public string UsageGuide { get; } = "Once you open the Tracker menu, you can select a tracker slot. Afterwards, ping a person to begin tracking them in that slot. Once you start tracking a person, you can run .goto [slot] to instantly move your camera to the person. However, for every active tracker, your regeneration rate will decrease.";
@@ -46,7 +39,7 @@ namespace ComAbilities.Abilities
         public override bool Enabled => _config.Enabled;
 
         public float AuxModifier => (float)Math.Pow(_config.AuxMultiplier,
-            Math.Min(1, _trackers.Count(x => x.Player != null)));
+            Math.Min(1, _trackers.Count(x => x.Enabled)));
 
         public AllHotkeys HotkeyButton { get; } = _config.Hotkey;
 
@@ -58,14 +51,11 @@ namespace ComAbilities.Abilities
         //public bool IsGettingPlayer => _expireTrackerTask.Enabled;
 
         private Cooldown _cooldown { get; } = new();
-        private UpdateTask _expireTrackerTask => new(30f, UpdateUI);
         //public bool InterfaceActive => CompManager.DisplayManager.SelectedScreen == DisplayTypes.Tracker;
         private TrackerManager _trackers => new() {
             new ActiveTracker(_config.Length, UpdateUI, ReqLevel),
             new ActiveTracker(_config.Length, UpdateUI, _config.Slot2Level)
         };
-
-        private Dictionary<AllHotkeys, ActiveTracker> TrackerHotkeys { get; } = new();
         // --------------------
 
         public void Trigger()
@@ -116,15 +106,14 @@ namespace ComAbilities.Abilities
 
         public override void KillTasks()
         {
-            _expireTrackerTask.AttemptKill();
             _trackers.KillAll();
         }
-        public bool TryGetTrackerPlayer(int trackerId, out Player? player)
+        public bool TryGetTrackerPlayer(int trackerId, out Player player)
         {
             ActiveTracker? activeTracker = _trackers[trackerId];
             if (activeTracker == null || activeTracker.Player == null)
             {
-                player = null;
+                player = default;
                 return false;
             }
             player = activeTracker.Player;
@@ -136,7 +125,7 @@ namespace ComAbilities.Abilities
             switch (hotkey)
             {
                 case AllHotkeys.HoldReload:
-                    if (_trackers.SelectedTracker != default && _trackers[_trackers.SelectedTracker].Enabled)
+                    if (_trackers.SelectedTracker != -1 && _trackers[_trackers.SelectedTracker].Enabled)
                     {
                         _trackers[_trackers.SelectedTracker].ForceEnd();
                     }

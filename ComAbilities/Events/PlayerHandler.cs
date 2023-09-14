@@ -1,11 +1,13 @@
 ﻿namespace Exiled.ComAbilitiesEvents
 {
+    using AdminToys;
     using ComAbilities;
     using ComAbilities.Abilities;
     using ComAbilities.Objects;
     using ComAbilities.Types;
     using ComAbilities.UI;
     using Exiled.API.Enums;
+    using Exiled.API.Extensions;
     using Exiled.API.Features;
     using Exiled.API.Features.Items;
     using Exiled.API.Structs;
@@ -15,12 +17,16 @@
     using HarmonyLib;
     using MapGeneration;
     using MEC;
+    using Mirror;
     using PlayerRoles;
     using PlayerRoles.PlayableScps.Scp079.GUI;
+    using Scp914;
 
     // using PluginAPI.Core;
     using System.Collections.Generic;
     using UnityEngine;
+    using YamlDotNet.Core.Tokens;
+    using static UnityEngine.GraphicsBuffer;
     using KeycardPermissions = Interactables.Interobjects.DoorUtils.KeycardPermissions;
     using Scp079Role = API.Features.Roles.Scp079Role;
 
@@ -136,6 +142,7 @@
             {
                 Instance.CompDict.Remove(player);
             }
+
             if (ev.NewRole == RoleTypeId.Scp079)
             {
                 //  ev.Player.ReferenceHub.roleManager.ServerSetRole(RoleTypeId.Scp079, RoleChangeReason.RemoteAdmin);
@@ -151,7 +158,7 @@
 
         public void OnSpawning(SpawningEventArgs ev)
         {
-
+            //ev.Player.SendFakeSyncVar(ev.Player.NetworkIdentity, typeof(Scp914Controller), nameof(Scp914Controller.Network_knobSetting), Scp914KnobSetting.OneToOne);
             Timing.CallDelayed(5, () =>
             {
                 Log.Debug("Showing display");
@@ -171,13 +178,17 @@
             });
             Timing.CallDelayed(10, () =>
             {
-                Log.Debug("Showing display");
-                //try
-                //{
+                try
+                {
+                    ev.Player.SendFakeSyncVar(Scp914Controller.Singleton.netIdentity, typeof(Scp914Controller), nameof(Scp914Controller.Network_knobSetting), Scp914KnobSetting.OneToOne);
+                } catch(Exception e)
+                {
+                    Log.Debug(e);
+                }
                 PlayerDisplay display = new(ev.Player);
                 display.CreateElement(-500, "<size=50px><line-height=20px>Player Displayer Example\nNew Lines");
                 // display.CreateElement(-200, "<size=40px>You are looking at an example");
-                display.CreateElement(-200, "<size=40px>You are looking at an example");
+                display.CreateElement(-400, "<size=40px>You are looking at an example");
                 display.CreateElement(-700, "<align=left>pmnixls");
                 Log.Debug("Hi chat");
                 display.Update();

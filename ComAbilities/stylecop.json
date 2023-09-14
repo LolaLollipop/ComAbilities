@@ -13,8 +13,10 @@
       "documentInternalElements": false,
       "documentPrivateElements": false,
       "documentPrivateFields": false
+    },
+    "orderingRules": {
+      "blankLinesBetweenUsingGroups": "require"
     }
-
 
   }
 }

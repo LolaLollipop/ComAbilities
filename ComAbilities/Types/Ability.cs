@@ -42,8 +42,7 @@ namespace ComAbilities.Types
     public abstract class Ability//<T>
       //  where T: struct
     {
-        public CompManager CompManager { get; }
-
+        protected CompManager CompManager { get; }
         public abstract string Name { get; }
         public abstract string Description { get; }
         public abstract float AuxCost { get; }

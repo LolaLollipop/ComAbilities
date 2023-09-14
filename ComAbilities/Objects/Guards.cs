@@ -49,6 +49,7 @@ namespace ComAbilities.Objects
             }
             return false;
         }
+
         public static bool SignalLost(Scp079Role role)
         {
             if (role.IsLost)
@@ -59,6 +60,7 @@ namespace ComAbilities.Objects
                 return false;
             }
         }
+
         public static bool NotEnoughAux(Scp079Role role, float cost, out string response)
         {
             response = "";
@@ -69,6 +71,7 @@ namespace ComAbilities.Objects
             }
             return false;
         }
+
         public static bool NotEnoughAuxDisplay(Scp079Role role, float cost, out string response)
         {
             response = "";
@@ -79,6 +82,7 @@ namespace ComAbilities.Objects
             }
             return false;
         }
+
         public static bool InvalidLevel(Scp079Role role, int level, out string response)
         {
             response = "";
@@ -89,6 +93,7 @@ namespace ComAbilities.Objects
             }
             return false;
         }
+
         public static bool OnCooldown(ICooldownAbility ability, out string response)
         {
             response = "";
@@ -99,6 +104,7 @@ namespace ComAbilities.Objects
             }
             return false;
         }
+
         public static bool OnCooldownDisplay(ICooldownAbility ability, out string response)
         {
             response = "";

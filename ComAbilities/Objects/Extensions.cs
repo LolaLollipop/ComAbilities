@@ -1,11 +1,13 @@
 ﻿using ComAbilities.Types;
 using CommandSystem.Commands.RemoteAdmin.Broadcasts;
 using Exiled.API.Features;
+using Mirror;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace ComAbilities.Objects
 {
@@ -18,6 +20,9 @@ namespace ComAbilities.Objects
 
         public static bool TryGetCM(this Player player, out CompManager manager) => Instance.CompDict.TryGet(player, out manager);
         public static CompManager GetCM(this Player player) => Instance.CompDict.GetOrError(player);
+
+
     }
+
 
 }

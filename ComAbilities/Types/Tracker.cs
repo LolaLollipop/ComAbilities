@@ -1,4 +1,5 @@
-﻿using ComAbilities.Objects;
+﻿using ComAbilities.Localizations;
+using ComAbilities.Objects;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using MEC;
@@ -16,6 +17,11 @@ namespace ComAbilities.Types
 {
     public sealed class TrackerManager : List<ActiveTracker>
     {
+        private static readonly ComAbilities Instance = ComAbilities.Instance;
+
+        private static TrackerT TrackerT => Instance.Localization.Tracker;
+        private static SharedT SharedT => Instance.Localization.Shared;
+
         public int SelectedTracker { get; internal set; } = -1;
        // private List<ActiveTracker> _trackers { get; } = new();
         public TrackerManager() { 
@@ -50,36 +56,12 @@ namespace ComAbilities.Types
             {
                 ActiveTracker tracker = this[i];
 
-                string color;
-                if (tracker.Enabled && tracker.Player != null)
-                {
-                    color = Helper.RoleColors[tracker.Player.Role] ?? "#660753";
-                }
-                else
-                {
-                    color = "#858784";
-                }
+                string color = (tracker.Enabled && tracker.Player != null) ? 
+                    (Helper.GetRoleColor(tracker.Player.Role) ?? "#660753") 
+                    : "#858784";
 
-                string role = tracker.Player?.Role?.Type switch
-                {
-                    RoleTypeId.ClassD => "CLASS-D",
-                    RoleTypeId.ChaosRifleman => "CI RIFLEMAN",
-                    RoleTypeId.ChaosConscript => "CI CONSCRIPT",
-                    RoleTypeId.ChaosRepressor => "CI REPRESSOR",
-                    RoleTypeId.ChaosMarauder => "CI MARAUDER",
-                    RoleTypeId.Scientist => "SCIENTIST",
-                    RoleTypeId.FacilityGuard => "FACILITY GUARD",
-                    RoleTypeId.NtfPrivate => "NTF PRIVATE",
-                    RoleTypeId.NtfSergeant => "NTF SERGEANT",
-                    RoleTypeId.NtfSpecialist => "NTF SPECIALIST",
-                    RoleTypeId.NtfCaptain => "NTF CAPTAIN",
-                    RoleTypeId.Tutorial => "TUTORIAL",
-                    RoleTypeId.CustomRole => "CANNOT DETECT",
-                    _ => "EMPTY"
-                };
-                // <color=#XXXXX> [ (1) CI RIFLEMAN : PRIMARYFIREARM KEY ]
-
-                string trackerString = $"\n<color={color}[ ({i}) {role} : {tracker.hotkey.ToString().ToUpper()} KEY]</color>";
+                string roleName = tracker?.Player?.Role != null ? SharedT.RoleNames[tracker.Player.Role].ToUpper() : TrackerT.EmptySlot;
+                string trackerString = string.Format(string.Format(TrackerT.TrackerFormat, i, color, roleName));
                 if (SelectedTracker == i)
                 {
                     trackerString = $"> <b>{trackerString}</b> <";
@@ -128,7 +110,6 @@ namespace ComAbilities.Types
         public Player? Player { get; private set; }
         public int Level { get; }
         public bool Enabled => _expireTask.IsRunning;
-        public AllHotkeys hotkey { get; }
 
         private UpdateTask _expireTask { get; }
         public ActiveTracker(float duration, Action killer, int level)

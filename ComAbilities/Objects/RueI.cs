@@ -153,12 +153,12 @@ namespace ComAbilities.UI
             float offset = 0;
             foreach (var element in _elements)
             {
-                sb.Append($"<line-height={-offset}px><br>");
+                sb.Append($"<line-height={-offset}px><br></line-height>");
                 sb.Append(element.Content);
                 sb.Append(Closer);
                 offset = element.Offset;
             }
-            Log.Debug(sb.ToString());
+
             return sb.ToString();
         }
 

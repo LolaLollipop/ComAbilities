@@ -128,8 +128,8 @@ namespace ComAbilities.Localizations
         [Description("{0}: number of active trackers")]
         public string ActiveDisplayText { get; set; } = "{0} TRACKERS ACTIVE";
 
-        [Description("{0}: index, {1} role color, {2} role name, {3} hotkey (uppercase)")]
-        public string TrackerFormat { get; set; } = "[ ({0}) <color={1}>{2}</color> : {3} KEY]";
+        [Description("{0}: index, {1} role color, {2} role name")]
+        public string TrackerFormat { get; set; } = "[ ({0}) <color={1}>{2}</color> ]";
 
         [Description("{0}: selected tracker")]
         public string SelectedTrackerFormat { get; set; } = "> <b>{0}</b> <";
@@ -138,6 +138,8 @@ namespace ComAbilities.Localizations
         public string SelectedFull { get; set; } = "HOLD [ RELOAD KEY ] TO DELETE";
         [Description("{0}: hotkey")]
         public string CloseMessage { get; set; } = "PRESS [ {0} KEY ] TO CLOSE MENU";
+        public string CycleMessage { get; set; } = "PRESS [ RELOAD ] TO CYCLE TRACKER";
+        public string EmptySlot { get; set; } = "EMPTY";
     }
 
     public sealed class GoToT : IAbilityLocale

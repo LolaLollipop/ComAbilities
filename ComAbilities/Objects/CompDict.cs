@@ -14,7 +14,6 @@ namespace ComAbilities.Objects
     /// </summary>
     public class CompDict
     {
-        private readonly static ComAbilities Instance = ComAbilities.Instance;
         private readonly static Dictionary<Player, CompManager> _playerComputers = new();
 
         public void CleanUp()

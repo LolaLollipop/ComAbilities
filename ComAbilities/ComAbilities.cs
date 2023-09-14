@@ -30,11 +30,12 @@
         private string LocalizationPath => $"{Paths.Configs}/{Server.Port}-ComAbilities_Localizations";
         private Version LocalizationVersion { get; } = new(1, 0, 0);
 
+
         private static readonly ComAbilities Singleton = new();
         public static ComAbilities Instance => Singleton;
 
 
-        public CompDict CompDict = new();
+        public CompDict CompDict { get; } = new();
 
         private Localizer<CALocalization> Localizer;
         public CALocalization Localization => Localizer.CurrentLocalization;

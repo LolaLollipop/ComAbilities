@@ -19,6 +19,7 @@ namespace Exiled.ComAbilitiesEvents
         public void OnPinging(PingingEventArgs ev)
         {
             if (!(ev.Type == API.Enums.PingType.Human)) return;
+
             CompManager compManager = Instance.CompDict.GetOrError(ev.Player);
             if (compManager.DisplayManager.SelectedScreen == DisplayTypes.Tracker)
             {

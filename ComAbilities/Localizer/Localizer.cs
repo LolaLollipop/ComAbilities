@@ -136,4 +136,6 @@ namespace Localizer
             Log.SendRaw($"[INFO] [{Name} Localizer] Successfully downloaded localizations", ConsoleColor.Yellow);
         }
     }
+
+
 }

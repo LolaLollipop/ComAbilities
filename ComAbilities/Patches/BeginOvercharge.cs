@@ -25,6 +25,7 @@ namespace ComAbilities.Patches
         [HarmonyPrefix]
         private static void Prefix(Scp079Recontainer __instance)
         {
+
             foreach (Player player in Player.List)
             {
                 if (player.Role == RoleTypeId.Scp106 && player.SessionVariables["ComAbilities_hologram"] != null)
