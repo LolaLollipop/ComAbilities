@@ -37,6 +37,7 @@
 
         public CompDict CompDict { get; } = new();
 
+        private Updater Updater;
         private Localizer<CALocalization> Localizer;
         public CALocalization Localization => Localizer.CurrentLocalization;
 
@@ -50,8 +51,13 @@
             _harmony = new Harmony(_harmonyId);
             _harmony.PatchAll();
 
-            Localizer = new();
+
+            HttpClient client = new();
+            Localizer = new(client);
             Localizer.Start(LocalizationsURL, LocalizationPath, Config.Localization, LocalizationVersion);
+
+            Updater = new(Version, "ComAbilities.dll", "https://api.github.com/repos/Ruemena/ComAbilities/releases/latest", client);
+            Updater.Start(this);
 
 
             playerHandler = new PlayerHandler();

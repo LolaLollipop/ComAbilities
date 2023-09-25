@@ -90,7 +90,7 @@ namespace ComAbilities.Commands
         }
         private RoleTypeId? GetSCP(string value)
         {
-            return value switch
+            return value.ToLower() switch
             {
                 "173" or "peanut" or "SCP173" or "SCP-173" or "SCP-049" => RoleTypeId.Scp173,
                 "049" or "doctor" or "doc" or "SCP049" or "SCP-049" or "SCP049" => RoleTypeId.Scp049,
@@ -100,5 +100,22 @@ namespace ComAbilities.Commands
                 _ => null
             };
         }
+    }
+}
+
+public class Stack<T>
+{
+    private List<T> items = new();
+
+    public void Push(T item)
+    {
+        items.Insert(0, item);
+    }
+
+    public T Pop()
+    {
+        var item = items[0];
+        items.RemoveAt(0);
+        return item;
     }
 }

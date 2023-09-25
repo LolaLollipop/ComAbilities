@@ -23,6 +23,12 @@ namespace Localizer
 
         public static IDeserializer Deserializer => Exiled.Loader.Loader.Deserializer;
 
+        public HttpClient Client { get; set; }
+        public Localizer(HttpClient client)
+        {
+            Client = client;
+        }
+
         //<size=35px><line-height=25px>Hello world<line-height=25px><size=50px>\nHello bad world</size><size=35px><line-height=-25px>\nHello worse world
         public async void Start(string url, string path, string selectedTranslation, Version version)
         {
@@ -93,7 +99,7 @@ namespace Localizer
 
         private async Task UpdateLocalizations(string url, string path, Version version)
         {
-            using HttpClient client = new();
+            using HttpClient client = Client;
             using Stream stream = await client.GetStreamAsync(url);
 
             using ZipArchive zipArchive = new(stream);

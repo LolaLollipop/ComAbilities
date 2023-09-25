@@ -1,42 +1,38 @@
-﻿using Exiled.API.Features;
-using MEC;
-using System.Text;
-using System.Text.RegularExpressions;
+﻿namespace ComAbilities.UI
+{
+    using System.Text;
+    using System.Text.RegularExpressions;
+    using Exiled.API.Features;
+    using MEC;
+    using VoiceChat;
 
-
-/// Handles 
-namespace ComAbilities.UI
-{ 
-    public abstract class Box
-    {
-        public abstract string HorizontalBar { get; set; }
-        public abstract string VerticalBar { get; set; }
-        public abstract string TopRightCorner { get; set; }
-        public abstract string BottomRightCorner { get; set; }
-        public abstract string TopLeftCorner { get; set; }
-        public abstract string BottomLeftCorner { get; set; }
-    }
     /// <summary>
-    /// Text in a display with a position
+    /// Text in a display with a position.
     /// </summary>
     public class Element
     {
-       // private static readonly Regex lineRegex = new("\n|<br>");
-        private static readonly Regex parserRegex = new(@"<(?:line-height=(-?[0-9]\d*(?:\.\d+?)?)px>|/line-height>|noparse>|/noparse>|br>)|\n");
+        /// <summary>
+        /// Gets the Regex used to parse hints.
+        /// </summary>
+        protected static readonly Regex ParserRegex = new(@"<(?:line-height=(-?[0-9]\d*(?:\.\d+?)?)px>|/line-height>|noparse>|/noparse>|br>)|\n");
 
         /// <summary>
-        /// The text of the element
+        /// Gets the text of the element.
         /// </summary>
-        public string Content { get; private set; }
+        public virtual string Content { get; protected set; }
+        /// <summary>
+        /// Gets the position of the element relative to the baseline.
+        /// </summary>
         public float Position { get; private set; } = 0;
         public float Offset { get; private set; } = 0;
 
         /// <summary>
-        /// Creates a new instance of the <see cref="Element"/> class.
+        /// Initializes a new instance of the <see cref="Element"/> class.
         /// </summary>
         /// <param name="position">The position of the element, where 0 is the hint baseline (roughly middle-bottom of the screen)</param>
         /// <param name="content">The content of the element</param>
-        internal Element(float position, string content) {
+        internal Element(float position, string content)
+        {
 
             Content = Parse(content, position, out float newOffset);
             Offset = newOffset;
@@ -57,8 +53,8 @@ namespace ComAbilities.UI
             float newOffset = 0;
 
             Log.Debug(position);
-            content = $"<line-height={position}px><br>" + content;
-            string newString = parserRegex.Replace(content, (match) =>
+            content = $"<line-height={position}px><br><line-height={PlayerDisplay.DefaultHeight}>" + content;
+            string newString = ParserRegex.Replace(content, (match) =>
             {
                 string small = match.Value.Substring(0, Math.Min(5, match.Value.Length));
 
@@ -92,18 +88,20 @@ namespace ComAbilities.UI
         }
 
         /// <summary>
-        /// Sets the content of this element
+        /// Sets the content of this element.
         /// </summary>
         /// <param name="content">The text to set the content to (will be parsed)</param>
-        public void Set(string content)
+        public virtual void Set(string content)
         {
-            //MatchCollection matches = parserRegex.Matches(content);
             string parsedContent = Parse(content, Position, out float offset);
             Offset = offset;
             Content = parsedContent;
         }
-       // public static string GetFirstFive(string content) => content.Substring(0, Math.Min(5, content.Length));
     }
+
+    /// <summary>
+    /// Represents a display for a player.
+    /// </summary>
     public class PlayerDisplay
     {
         /// <summary>
@@ -111,54 +109,65 @@ namespace ComAbilities.UI
         /// </summary>
         public const float DefaultHeight = 35; // in pixels;
 
-        private List<Element> _elements = new();
-        private const string Closer = "</align></color></b></i></cspace></line-height></line-indent></link></lowercase></uppercase></smallcaps></margin></mark></mspace></noparse></pos></size></s></u></voffset></width>";
+        /// <summary>
+        /// Gets a string used to close all tags.
+        /// </summary>
+        private const string Closer = "</noparse></align></color></b></i></cspace></line-height></line-indent></link></lowercase></uppercase></smallcaps></margin></mark></mspace></pos></size></s></u></voffset></width>";
+        private const float HintRateLimit = 0.55f;
+
+        private List<Element> elements = new();
         private Player Player { get; set; }
 
-        private CoroutineHandle? RateLimitTask;
-        private bool RateLimitActive = false;
-        private const float HintRateLimit = 0.55f;
-        private bool ShouldUpdate = false;
+        private CoroutineHandle? rateLimitTask;
+        private bool rateLimitActive = false;
+        private bool shouldUpdate = false;
 
         /// <summary>
-        /// Creates a new instance of the <see cref="PlayerDisplay"/> class.
+        /// Initializes a new instance of the <see cref="PlayerDisplay"/> class.
         /// </summary>
-        /// <param name="player">The <see cref="Exiled.API.Features.Player"/>to assign the display to</param>
+        /// <param name="player">The <see cref="Exiled.API.Features.Player"/>to assign the display to.</param>
         public PlayerDisplay(Player player)
         {
             Player = player;
         }
 
+        /// <summary>
+        /// Finalizes an instance of the <see cref="PlayerDisplay"/> class.
+        /// </summary>
         ~PlayerDisplay()
         {
-            if (RateLimitTask is CoroutineHandle ch) Timing.KillCoroutines(ch);
+            if (rateLimitTask is CoroutineHandle ch)
+            {
+                Timing.KillCoroutines(ch);
+            }
         }
 
         /// <summary>
-        /// Creates a new element and puts it in the player's display
+        /// Creates a new element and puts it in the player's display.
         /// </summary>
-        /// <param name="position">The position of the element, where 0 is the hint baseline (roughly middle-bottom of the screen)</param>
-        /// <param name="content">The text to immediately set the element's content to</param>
+        /// <param name="position">The position of the element, where 0 is the hint baseline (roughly middle-bottom of the screen).</param>
+        /// <param name="content">The text to immediately set the element's content to.</param>
         /// <returns>The new element</returns>
         public Element CreateElement(float position, string content = "")
         {
             Element element = new(position, content);
-            _elements.Add(element);
+            elements.Add(element);
             return element;
         }
+
         public string ParseElements()
         {
             StringBuilder sb = new();
 
             float offset = 0;
-            foreach (var element in _elements)
+            foreach (var element in elements)
             {
                 sb.Append($"<line-height={-offset}px><br></line-height>");
                 sb.Append(element.Content);
                 sb.Append(Closer);
                 offset = element.Offset;
             }
-
+            sb.Insert(0, $"<line-height={offset}>\n");
             return sb.ToString();
         }
 
@@ -167,24 +176,27 @@ namespace ComAbilities.UI
         /// </summary>
         public void Update()
         {
-            if (RateLimitActive)
+            if (rateLimitActive)
             {
-                ShouldUpdate = true;
+                shouldUpdate = true;
                 return;
             }
-            RateLimitActive = true;
+
+            rateLimitActive = true;
             Timing.CallDelayed(HintRateLimit, OnRateLimitFinished);
 
             Hint hint = new(ParseElements(), 9999999, true);
             Player.ShowHint(hint);
         }
+
         private void OnRateLimitFinished()
         {
-            RateLimitActive = false;
-            if (ShouldUpdate)
+            rateLimitActive = false;
+            if (shouldUpdate)
             {
                 Update();
             }
         }
     }
 }
+

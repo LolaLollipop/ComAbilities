@@ -1,20 +1,12 @@
 ﻿using ComAbilities.Localizations;
 using ComAbilities.Objects;
 using ComAbilities.Types;
-using Exiled.API.Enums;
 using Exiled.API.Features;
-using Exiled.API.Features.Roles;
-using PlayerRoles;
-using PlayerRoles.PlayableScps.HumeShield;
-using PlayerRoles.PlayableScps.Scp079;
-using Respawning;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
+using Exiled.API.Features.DamageHandlers;
+using Exiled.ComAbilitiesEvents;
+using PlayerRoles.PlayableScps.Scp079.Rewards;
+using PlayerStatsSystem;
 using System.Text;
-using System.Threading.Tasks;
-using YamlDotNet.Core;
 
 namespace ComAbilities.Abilities
 {
@@ -108,6 +100,7 @@ namespace ComAbilities.Abilities
         {
             _trackers.KillAll();
         }
+
         public bool TryGetTrackerPlayer(int trackerId, out Player player)
         {
             ActiveTracker? activeTracker = _trackers[trackerId];
@@ -117,9 +110,14 @@ namespace ComAbilities.Abilities
                 return false;
             }
             player = activeTracker.Player;
+          
             return true;
         }
 
+        public static void Example(int number, float anotherNumber, string notANumber)
+        {
+
+        }
         public void HandleInputs(AllHotkeys hotkey)
         {
             switch (hotkey)
@@ -130,7 +128,7 @@ namespace ComAbilities.Abilities
                         _trackers[_trackers.SelectedTracker].ForceEnd();
                     }
                     break;
-
+                        
                 case AllHotkeys.Reload:
                     if (_trackers.SelectedTracker == _trackers.Count - 1)
                     {

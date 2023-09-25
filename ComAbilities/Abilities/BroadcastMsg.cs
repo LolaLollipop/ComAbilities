@@ -24,7 +24,7 @@ namespace ComAbilities.Abilities
         
         public float CooldownLength { get; } = _config.Cooldown;
         public bool OnCooldown => _cooldown.Active;
-        private Cooldown _cooldown => new();
+        private Cooldown _cooldown { get; } = new();
 
         public int GetETA()
         {

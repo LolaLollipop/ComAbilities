@@ -69,15 +69,12 @@ namespace ComAbilities.Commands
             if (!arguments.Any()) {
                 return null;
             }
-            switch (arguments.First())
+            return arguments.First().ToLower() switch
             {
-                case "mtf" or "ntf":
-                    return SpawnableTeamType.NineTailedFox;
-                case "ci" or "chaos":
-                    return SpawnableTeamType.ChaosInsurgency;
-                default:
-                    return null;
-            }
+                "mtf" or "ntf" => (SpawnableTeamType?)SpawnableTeamType.NineTailedFox,
+                "ci" or "chaos" => (SpawnableTeamType?)SpawnableTeamType.ChaosInsurgency,
+                _ => null,
+            };
         }
     }
 }

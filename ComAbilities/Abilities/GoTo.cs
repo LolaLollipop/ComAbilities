@@ -42,12 +42,11 @@ namespace ComAbilities.Abilities
 
         public float CooldownLength => _config.Cooldown;
 
-        private readonly Cooldown _cooldown = new();
+        private Cooldown _cooldown { get; } = new();
 
 
         public void Trigger(Player player, GoToType goToType)
         {
-
             Room playerRoom = player.CurrentRoom;
             IEnumerable<Camera> cameras = playerRoom.Cameras;
             if (!cameras.Any()) return;

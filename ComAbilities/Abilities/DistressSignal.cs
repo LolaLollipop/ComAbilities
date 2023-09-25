@@ -1,18 +1,8 @@
 ﻿using ComAbilities.Localizations;
 using ComAbilities.Objects;
 using ComAbilities.Types;
-using Exiled.API.Enums;
 using Exiled.API.Features;
-using Exiled.API.Features.Roles;
-using PlayerRoles;
-using PlayerRoles.PlayableScps.HumeShield;
-using PlayerRoles.PlayableScps.Scp079;
 using Respawning;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ComAbilities.Abilities
 {
@@ -34,10 +24,10 @@ namespace ComAbilities.Abilities
         public AllHotkeys hotkeyButton => Instance.Config.RealityScrambler.Hotkey;
         public override bool Enabled { get; } = _config.Enabled;
 
-        public float CooldownLength => _config.Cooldown;
+        public float CooldownLength { get; } = _config.Cooldown;
         public bool OnCooldown => _cooldown.Active;
 
-        private Cooldown _cooldown => new();
+        private Cooldown _cooldown { get; } = new();
 
         public int GetETA()
         {

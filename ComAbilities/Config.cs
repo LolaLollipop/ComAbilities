@@ -110,8 +110,7 @@
         [Description("How long the hologram lasts before it is finished")]
         public float Length { get; set; } = 20f;
         [Description("A list of all selectable roles, their unlocked level, and their aux cost")]
-        [Range(5, int.MaxValue)]
-        public List<HologramRoleConfig> RoleLevels = new()
+        public List<HologramRoleConfig> RoleLevels { get; } = new()
         {
             new HologramRoleConfig(RoleTypeId.ClassD, 4, 40)
         };

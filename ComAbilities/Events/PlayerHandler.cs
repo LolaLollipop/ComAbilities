@@ -158,7 +158,11 @@
 
         public void OnSpawning(SpawningEventArgs ev)
         {
-            //ev.Player.SendFakeSyncVar(ev.Player.NetworkIdentity, typeof(Scp914Controller), nameof(Scp914Controller.Network_knobSetting), Scp914KnobSetting.OneToOne);
+            Round.TargetOffset -= 3;
+            Log.Debug(Round.TargetOffset);
+            Round.UpdateTargetCounter();
+
+
             Timing.CallDelayed(5, () =>
             {
                 Log.Debug("Showing display");
@@ -167,7 +171,7 @@
                     PlayerDisplay display = new(ev.Player);
                     display.CreateElement(-500, "<size=50px><line-height=20px>Player Displayer Example<br>New Lines");
                     display.CreateElement(-200, "<size=40px>You are looking at an example");
-                    display.CreateElement(-200, "<size=40px>Another eaxmpl e gasp");
+                //    display.CreateElement(-200, "<size=40px>Another eaxmpl e gasp");
                     display.CreateElement(-700, "<align=left>pmnixls");
                     Log.Debug("Hi chat");
                     display.Update();
@@ -188,7 +192,7 @@
                 PlayerDisplay display = new(ev.Player);
                 display.CreateElement(-500, "<size=50px><line-height=20px>Player Displayer Example\nNew Lines");
                 // display.CreateElement(-200, "<size=40px>You are looking at an example");
-                display.CreateElement(-400, "<size=40px>You are looking at an example");
+                display.CreateElement(-200, "<size=40px>You are loo\nki\nng at an example");
                 display.CreateElement(-700, "<align=left>pmnixls");
                 Log.Debug("Hi chat");
                 display.Update();

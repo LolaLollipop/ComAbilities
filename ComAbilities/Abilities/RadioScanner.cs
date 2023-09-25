@@ -1,20 +1,6 @@
 ﻿using ComAbilities.Localizations;
 using ComAbilities.Objects;
 using ComAbilities.Types;
-using Exiled.API.Enums;
-using Exiled.API.Features;
-using Exiled.API.Features.Roles;
-using PlayerRoles;
-using PlayerRoles.PlayableScps.HumeShield;
-using PlayerRoles.PlayableScps.Scp079;
-using Respawning;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using YamlDotNet.Core;
 
 namespace ComAbilities.Abilities
 {

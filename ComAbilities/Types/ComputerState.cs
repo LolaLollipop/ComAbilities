@@ -14,6 +14,7 @@ namespace ComAbilities.Types
         public Camera CurrentCam;
         public float BlackoutZoneCooldown;
         public float RoomLockdownCooldown;
+
         public HologramState(Scp079Role role)
         {
             this.Level = role.Level;

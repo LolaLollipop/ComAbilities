@@ -1,8 +1,24 @@
-﻿// A way to handle coroutine safely (ensures that they don't keep running)
-using MEC;
-
-namespace ComAbilities.Types
+﻿namespace ComAbilities.Types
 {
-    public record Range(int min, int max);
+    public class Range {
+        public int Min { get; set; }
+
+        public int Max { get; set; }
+
+        public Range()
+        {
+        }
+
+        public Range(int min, int max)
+        {
+            Min = min;
+            Max = max;
+        }
+
+        public void Deconstruct(out int min, out int max)
+        {
+            min = Min;
+            max = Max;
+        }
+    };
 }
-    
