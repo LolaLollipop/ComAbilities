@@ -1,5 +1,6 @@
 ﻿using ComAbilities.Localizations;
 using ComAbilities.Objects;
+using ComAbilities.Types.RueTasks;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using MEC;
@@ -15,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace ComAbilities.Types
 {
-    public sealed class TrackerManager : List<ActiveTracker>
+    public sealed class TrackerManager : List<ActiveTracker>, IKillable
     {
         private static readonly ComAbilities Instance = ComAbilities.Instance;
 
@@ -32,6 +33,7 @@ namespace ComAbilities.Types
         {
             this[SelectedTracker].Start(player);
         }
+
         // Used for quick UI checks
         public TrackerState GetState(int trackerId)
         {
@@ -87,13 +89,14 @@ namespace ComAbilities.Types
         {
             _trackers.Add(tracker);
         } */
-        public void KillAll()
+        public void CleanUp()
         {
             foreach (ActiveTracker tracker in this)
             {
-                tracker.ForceEnd();
+                tracker.CleanUp();
             }
 
+            base.Clear();
         }
       /*  public IEnumerator<ActiveTracker> GetEnumerator()
         {
@@ -105,16 +108,18 @@ namespace ComAbilities.Types
             return GetEnumerator();
         } */
     }
-    public class ActiveTracker
+    public class ActiveTracker : IKillable
     {
         public Player? Player { get; private set; }
         public int Level { get; }
         public bool Enabled => _expireTask.IsRunning;
 
         private UpdateTask _expireTask { get; }
+        private Action _killer { get; }
         public ActiveTracker(float duration, Action killer, int level)
         {
-            _expireTask = new UpdateTask(duration, () => { Player = null; killer(); });
+            _killer = killer;
+            _expireTask = new UpdateTask(duration, () => { Player = null; _killer(); });
             this.Level = level;
         }
 
@@ -124,9 +129,10 @@ namespace ComAbilities.Types
             _expireTask.Run();
         }
 
-        public void ForceEnd()
+        public void CleanUp()
         {
-            _expireTask.Interrupt();
+            _killer();
+            _expireTask.CleanUp();
         }
     }
 }

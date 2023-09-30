@@ -7,6 +7,7 @@ namespace Exiled.ComAbilitiesEvents
     using ComAbilities.Objects;
     using ComAbilities.Types;
     using Exiled.API.Features;
+    using Exiled.API.Features.Core.Generic;
     using Exiled.Events.EventArgs.Scp079;
     using System.Text;
     using UnityEngine;

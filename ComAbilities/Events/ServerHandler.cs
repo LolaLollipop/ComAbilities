@@ -2,6 +2,8 @@
 namespace Exiled.ComAbilitiesEvents
 {
     using ComAbilities;
+    using ComAbilities.Objects;
+    using ComAbilities.Types.RueTasks;
     using Exiled.Events.EventArgs.Server;
 
     internal sealed class ServerHandler
@@ -9,9 +11,13 @@ namespace Exiled.ComAbilitiesEvents
 
         private readonly ComAbilities Instance = ComAbilities.Instance;
 
-        public void OnRoundEnded(RoundEndedEventArgs ev)
+        public static TaskPool RoundTaskPool { get; set; } = new();
+
+        public void OnRoundEnded(RoundEndedEventArgs _)
         {
             Instance.CompDict.CleanUp();
+            RoundTaskPool.CleanUp();
+            GeneratorEffects.RefreshSingleton();
         }
     }
 }

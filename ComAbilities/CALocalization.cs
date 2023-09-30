@@ -91,6 +91,7 @@ namespace ComAbilities.Localizations
         [Description("{0}: cooldown length")]
         public string Success { get; set; } = "Successfully sent distress signal. Another distress signal can be broadcasted in {0} seconds.";
     }
+
     public sealed class RealityScramblerT : IAbilityLocale
     {
         public string Name { get; set; } = "Reality Scrambler";
@@ -99,6 +100,7 @@ namespace ComAbilities.Localizations
         public string DisplayText { get; set; } = "[{0} KEY] REALITY SCRAMBLER ({1} AUX)";
         public string ActiveText { get; set; } = "REALITY SCRAMBLER ACTIVE";
     }
+
     public sealed class HologramT : IAbilityLocale
     {
         public string Name { get; set; } = "Hologram";

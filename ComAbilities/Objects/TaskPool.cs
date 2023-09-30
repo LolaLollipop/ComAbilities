@@ -1,17 +1,33 @@
-﻿namespace ComAbilities.UI
+﻿namespace ComAbilities.Types.RueTasks
 {
-    using System.Text;
-    using System.Text.RegularExpressions;
-    using Exiled.API.Features;
-    using MEC;
-    using VoiceChat;
-
     /// <summary>
-    /// Manages Tasks. 
+    /// Manages IKillables. 
     /// </summary>
-    public class TaskPool
+    public class TaskPool : IKillable
     {
-       
+        public List<IKillable> Tasks { get; private set; } = new();
+
+        ~TaskPool()
+        {
+            CleanUp();  
+        }
+
+
+        public void Add(IKillable task)
+        {
+            Tasks.Add(task);
+        }
+
+
+        public void CleanUp()
+        {
+            foreach (IKillable task in Tasks)
+            {
+                task.CleanUp();
+            }
+
+            Tasks.Clear();
+        }
     }
 }
 

@@ -19,7 +19,7 @@ namespace ComAbilities.Types
     {
         public bool OnCooldown { get; }
         public abstract float CooldownLength { get; }
-        public int GetETA();
+        public float GetDisplayETA();
     }
     public interface IHotkeyAbility
     {
@@ -36,13 +36,44 @@ namespace ComAbilities.Types
 
        // void Toggle(params object[] args);
     }
+    /*public abstract class ToggleableAbility : Ability
+    {
+        protected ToggleableAbility(CompManager compManager) : base(compManager)
+        {
+        }
+
+        public abstract string ActiveDisplayText { get; }
+        public abstract float AuxModifier { get; }
+        public bool IsActive { get; private set; }
+
+        public abstract void Toggle();
+
+        protected virtual void OnEnabled()
+        {
+            IsActive = true;
+            base.CompManager.ActiveAbilities.Add(this);
+            CompManager.DisplayManager.Update();
+        }
+        protected virtual void OnDisabled()
+        {
+            IsActive = false;
+            base.CompManager.ActiveAbilities.Remove(this);
+            CompManager.DisplayManager.Update();
+        }
+
+        public virtual void ForceDisable()
+        {
+            if (IsActive) OnDisabled();
+        } 
+    }*/
     /// <summary>
     /// Base class for abilities
     /// </summary>
-    public abstract class Ability//<T>
+    public abstract class Ability : IKillable
       //  where T: struct
     {
         protected CompManager CompManager { get; }
+
         public abstract string Name { get; }
         public abstract string Description { get; }
         public abstract float AuxCost { get; }
@@ -64,9 +95,7 @@ namespace ComAbilities.Types
             return currentAux >= this.AuxCost;
         }
      // public abstract void Trigger(T value);
-        /// <summary>
-        /// Cleans up the ability, removing any floating tasks
-        /// </summary>
-        public abstract void KillTasks();
+
+        public abstract void CleanUp();
     }
 }

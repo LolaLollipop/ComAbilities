@@ -88,18 +88,7 @@ namespace ComAbilities.Abilities
             CompManager.DisplayManager.Update(DisplayTypes.Tracker);
         }
 
-        public int GetETA()
-        {
-            if (_cooldown == null) throw new Exception("Attempt to get ETA of a null rateLimitTask");
-            float? eta = _cooldown.GetETA();
-            if (!eta.HasValue) throw new Exception("Attempt to get ETA of a null rateLimitTask");
-            return (int)eta;
-        }
-
-        public override void KillTasks()
-        {
-            _trackers.KillAll();
-        }
+        public float GetDisplayETA() => _cooldown.GetDisplayETA();
 
         public bool TryGetTrackerPlayer(int trackerId, out Player player)
         {
@@ -114,10 +103,6 @@ namespace ComAbilities.Abilities
             return true;
         }
 
-        public static void Example(int number, float anotherNumber, string notANumber)
-        {
-
-        }
         public void HandleInputs(AllHotkeys hotkey)
         {
             switch (hotkey)
@@ -125,7 +110,7 @@ namespace ComAbilities.Abilities
                 case AllHotkeys.HoldReload:
                     if (_trackers.SelectedTracker != -1 && _trackers[_trackers.SelectedTracker].Enabled)
                     {
-                        _trackers[_trackers.SelectedTracker].ForceEnd();
+                        _trackers[_trackers.SelectedTracker].CleanUp();
                     }
                     break;
                         
@@ -144,6 +129,11 @@ namespace ComAbilities.Abilities
                     CompManager.DisplayManager.Update();
                     break;
             }
+        }
+
+        public override void CleanUp()
+        {
+            _trackers.CleanUp();
         }
         /*public void HandleInputs(AllHotkeys? hotkey)
         {

@@ -1,8 +1,10 @@
 ﻿// A way to handle coroutine safely (ensures that they don't keep running)
-namespace ComAbilities.Types
+namespace ComAbilities.Types.RueTasks
 {
     using Exiled.API.Features;
+    using global::ComAbilities.UI;
     using MEC;
+    using System.Diagnostics.CodeAnalysis;
 
     public static class MECExtensions
     {
@@ -14,7 +16,7 @@ namespace ComAbilities.Types
     /// <summary>
     /// Task that runs an action every interval, optionally doing another action on finished
     /// </summary>
-    public class PeriodicTask : Task
+    public class PeriodicTask : TaskBase
     {
         public bool Enabled => (CH != null) && Timing.IsRunning((CoroutineHandle)CH); 
 
@@ -69,16 +71,16 @@ namespace ComAbilities.Types
             }
             base.OnEnd();
         }
-        public override void AttemptKill()
+        public override void CleanUp()
         {
             Killer?.Kill();
-            base.AttemptKill();
+            base.CleanUp();
         }
     }
     /// <summary>
     /// Task that runs a function after a certain period of time
     /// </summary>
-    public class UpdateTask : Task
+    public class UpdateTask : TaskBase
     {
         public bool Enabled { get { return (CH != null) && Timing.IsRunning((CoroutineHandle)CH); } }
         public bool IsRunning { get; private set; } = false;
@@ -98,8 +100,10 @@ namespace ComAbilities.Types
         public override CoroutineHandle Run(float? time = null)
         {
             if (CH.HasValue) Timing.KillCoroutines(CH.Value);
+
             IsRunning = true;
             CH = Timing.CallDelayed(time ?? this.Time, OnEnd);
+
             return CH.Value;
         }
         protected override void OnStart()
@@ -113,34 +117,8 @@ namespace ComAbilities.Types
             base.OnEnd();
         }
     }
-    /// <summary>
-    /// Task that does nothing except wait - use with .Enabled
-    /// </summary>
-    public class CooldownTask : Task
-    {
-        public bool Enabled { get { return (CH is not null) && Timing.IsRunning((CoroutineHandle)CH); } }
 
-        public CooldownTask(float time)
-        {
-            Time = time;
-        }
-
-        public override CoroutineHandle Run(float? time = null)
-        {
-            CH = Timing.CallDelayed(time ?? this.Time, OnEnd);
-            return CH.Value;
-        }
-        /*   public override void OnStart()
-           {
-               base.OnStart();
-           }
-
-           public override void OnEnd()
-           {
-               base.OnEnd();
-           } */
-    }
-    public abstract class Task
+    public abstract class TaskBase : IKillable
     {
         public CoroutineHandle? CH { get; protected set; }
         public long? StartedAt { get; private set; }
@@ -148,7 +126,7 @@ namespace ComAbilities.Types
         public abstract CoroutineHandle Run(float? time = null);
 
         protected virtual void OnEnd() { }
-        
+
         protected virtual void OnStart()
         {
             CH = Run(Time);
@@ -160,11 +138,7 @@ namespace ComAbilities.Types
         /// </summary>
         public void Interrupt()
         {
-            if (CH != null)
-            {
-                Timing.KillCoroutines((CoroutineHandle)CH);
-                StartedAt = null;
-            }
+            CH?.Kill();
 
             StartedAt = null;
             OnEnd();
@@ -173,24 +147,26 @@ namespace ComAbilities.Types
         /// <summary>
         /// Ends the task and does NOT call the OnEnd function
         /// </summary>
-        public virtual void AttemptKill()
+        public virtual void CleanUp()
         {
             CH?.Kill();
             StartedAt = null;
         }
-        public long? GetETA()
+
+        public float? GetETA()
         {
             if (StartedAt == null) return null;
             
-            return (long?)((Time * 1000) - (new DateTimeOffset().ToUnixTimeMilliseconds() - StartedAt));
+            return ((Time * 1000) - (new DateTimeOffset().ToUnixTimeMilliseconds() - StartedAt));
         }
-        public long? RunningFor()
+
+        public float? RunningFor()
         {
             if (StartedAt == null) return null;
 
             return new DateTimeOffset().ToUnixTimeMilliseconds() - StartedAt;
         }
 
-
+        //public void Pool(TaskPool pool) => pool.
     }
 }

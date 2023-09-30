@@ -99,7 +99,7 @@ namespace ComAbilities.Objects
             response = "";
             if (ability.OnCooldown)
             {
-                response = string.Format(Errors.OnCooldown, ability.GetETA());
+                response = string.Format(Errors.OnCooldown, ability.GetDisplayETA());
                 return true;
             }
             return false;
@@ -110,7 +110,7 @@ namespace ComAbilities.Objects
             response = "";
             if (ability.OnCooldown)
             {
-                response = string.Format(Errors.DisplayOnCooldown, ability.GetETA());
+                response = string.Format(Errors.DisplayOnCooldown, ability.GetDisplayETA());
                 return true;
             }
             return false;

@@ -13,16 +13,22 @@ using System.Xml;
 
 namespace ComAbilities.Objects
 {
-    public static class GeneratorEffects
+    public class GeneratorEffects
     {
-        public static CoroutineHandle? CH { get; set; }
+        private GeneratorEffects() { }
 
-        private static GeneratorEffectsConfigs _config { get; } = ComAbilities.Instance.Config.GeneratorEffectsConfigs;
+        private static GeneratorEffects singleton { get; set; } = new();
+        public static GeneratorEffects Singleton => singleton;
 
-        private static int _lastCount { get; set; } = -1;
+        private static GeneratorEffectsConfigs _config => ComAbilities.Instance.Config.GeneratorEffectsConfigs;
+
 
         private const int minTimeUntilExplode = 3;
-        public static void Kill()
+
+        private int _lastCount { get; set; } = -1;
+        public CoroutineHandle? CH { get; set; }
+
+        public void Kill()
         {
             if (CH.HasValue)
             {
@@ -30,7 +36,8 @@ namespace ComAbilities.Objects
                 CH = null;
             }
         }
-        public static void Update()
+
+        public void Update()
         {
             if (!_config.DoDoorExploding) return;
             int activatedGens = Generator.Get(Exiled.API.Enums.GeneratorState.Engaged).Count();
@@ -47,7 +54,7 @@ namespace ComAbilities.Objects
             }
         }
 
-        private static IEnumerator<float> DestroyDoors(Range range)
+        private IEnumerator<float> DestroyDoors(Range range)
         {
             Random random = new((int)new DateTimeOffset().ToUnixTimeMilliseconds());
             IEnumerable<Door> doors = Door.Get(x => x.IsDamageable && !_config.BlacklistedDoors.Contains(x.Type));
@@ -62,7 +69,7 @@ namespace ComAbilities.Objects
                 if (doors.Count() == 0)
                 {
                     CH = null;
-                    Timing.CurrentCoroutine.Kill();
+                    Timing.KillCoroutines(Timing.CurrentCoroutine);
                     yield break;
                 }
                 if (doors.ToList().RandomItem() is IDamageableDoor selectedDoor)
@@ -70,6 +77,11 @@ namespace ComAbilities.Objects
                     selectedDoor.Break();
                 }
             }
+        }
+
+        internal static void RefreshSingleton()
+        {
+            singleton = new();
         }
     }
 

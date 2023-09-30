@@ -132,3 +132,9 @@ csharp_style_prefer_extended_property_pattern = true:suggestion
 csharp_style_var_for_built_in_types = false:silent
 csharp_style_var_when_type_is_apparent = false:silent
 csharp_style_var_elsewhere = false:silent
+
+# SA1000: Keywords should be spaced correctly
+dotnet_diagnostic.SA1000.severity = none
+
+# SA1101: Prefix local calls with this
+dotnet_diagnostic.SA1101.severity = none

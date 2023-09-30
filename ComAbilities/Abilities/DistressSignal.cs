@@ -29,13 +29,7 @@ namespace ComAbilities.Abilities
 
         private Cooldown _cooldown { get; } = new();
 
-        public int GetETA()
-        {
-            if (_cooldown == null) throw new Exception("Attempt to get ETA of a null rateLimitTask");
-            float? eta = _cooldown.GetETA();
-            if (!eta.HasValue) throw new Exception("Attempt to get ETA of a null rateLimitTask");
-            return (int)eta;
-        }
+        public float GetDisplayETA() => _cooldown.GetDisplayETA();
 
         public void Trigger(SpawnableTeamType team)
         {
@@ -45,9 +39,6 @@ namespace ComAbilities.Abilities
             _cooldown.Start(CooldownLength);
         }
 
-        public override void KillTasks()
-        {
-           // _cooldownTask.AttemptKill();
-        }
+        public override void CleanUp() { }
     }
 }

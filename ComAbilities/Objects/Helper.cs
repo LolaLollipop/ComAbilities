@@ -14,12 +14,13 @@ using UnityEngine;
 
 namespace ComAbilities.Objects
 {
+
+    internal record IndexIterator<T> (int Index, T Value);
     /// <summary>
     /// Helper functions
     /// </summary>
     internal static class Helper
     {
-
         public static Dictionary<RoleTypeId, string> RoleColors = new()
         {
             { RoleTypeId.ChaosRepressor, "#0D7D35" },
@@ -36,9 +37,8 @@ namespace ComAbilities.Objects
         };
         public static string? GetRoleColor(RoleTypeId role) => RoleColors.TryGetValue(role, out var color) ? color : null;
 
-
         public static T? GetClosest<T>(Vector3 position, IEnumerable<T> objects)
-        where T: IPosition
+            where T: IPosition
         {
             T? chosen = default;
             float closestDistance = Mathf.Infinity;
@@ -57,34 +57,42 @@ namespace ComAbilities.Objects
 
             return chosen;
         }
+
         public static string GetCleanText(string text)
         {
             string cleanText = text.Replace("</noparse>", "</nopa​rse>"); // zero width space is inserted
             return $"<noparse>{cleanText}</noparse>";
         }
-        public static Player[] GetSCPs()
-        {
-            return Player.Get(Side.Scp).ToArray();
-        }
+
+        public static Player[] GetSCPs() => Player.Get(Side.Scp).ToArray();
+
         public static int GetETA(float cost, float current, float regenRate)
         {
             float x = (cost - current) / regenRate;
             return (int)Math.Min(Math.Round(x), 0);
         }
+
         public static string FormatError(string message)
         {
             return $"<align=center>Hello world </align>";
         }
+
         public static string ErrorNotEnoughAux(Ability ability, PlayerRoles.PlayableScps.Scp079.Scp079AuxManager auxManager)
         {
             return FormatError($"[{ability.Name.ToUpper()}] NOT ENOUGH AUX POWER. ETA: {auxManager.GenerateETA(ability.AuxCost)} SECONDS");
         }
+
         public static float GetETA(Scp079Role role, float cost)
         {
             if (role == null) throw new Exception("No role");
             if (cost <= role.Energy) return 0.5f;
             float regenSpeed = role.EnergyRegenerationSpeed;
             return (float)Math.Max(0.5, (role.Energy - cost) / regenSpeed);
+        }
+
+        public static IEnumerable<IndexIterator<T>> GetIndexIterator<T>(IEnumerable<T> enumerator)
+        {
+            return enumerator.Select((v, i) => new IndexIterator<T>(i, v));
         }
     }
 }

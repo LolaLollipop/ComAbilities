@@ -26,13 +26,8 @@ namespace ComAbilities.Abilities
         public bool OnCooldown => _cooldown.Active;
         private Cooldown _cooldown { get; } = new();
 
-        public int GetETA()
-        {
-            if (_cooldown == null) throw new Exception("Attempt to get ETA of a null rateLimitTask");
-            float? eta = _cooldown.GetETA();
-            if (!eta.HasValue) throw new Exception("Attempt to get ETA of a null rateLimitTask");
-            return (int)eta;
-        }
+        public float GetDisplayETA() => _cooldown.GetDisplayETA();
+
         public void Trigger(string content)
         {
             //  value.Length <= maxChars ? value : value.Substring(0, maxChars) + "...";
@@ -45,11 +40,7 @@ namespace ComAbilities.Abilities
                 scp.Broadcast(broadcast);
             }
         }
-        public void UpdateText()
-        {
-            // _cooldownTask.Run();
-        }
 
-        public override void KillTasks() { }
+        public override void CleanUp() { }
     }
 }

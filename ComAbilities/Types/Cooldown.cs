@@ -25,8 +25,8 @@ namespace ComAbilities.Types
         /// </summary>
         public bool Active => IsActive();
 
-        private DateTimeOffset? _startedAt { get; set; }
-        private float? _length { get; set; }
+        private DateTimeOffset? _startedAt { get; set; } = new DateTimeOffset();
+        private float? _length { get; set; } = 0;
 
         public void Start(float time)
         {
@@ -39,12 +39,16 @@ namespace ComAbilities.Types
             if (_length == null) return null;
             return (new DateTimeOffset().ToUnixTimeMilliseconds() + _length - _startedAt.Value.ToUnixTimeMilliseconds());
         }
+
+        public float GetDisplayETA() => Mathf.Max(0.5f, (int?)GetETA() ?? 0);
+
         public long? RunningFor()
         {
             if (_startedAt == null) return null;
 
             return new DateTimeOffset().ToUnixTimeMilliseconds() - _startedAt.Value.ToUnixTimeMilliseconds();
         }
+
         private bool IsActive()
         {
             if (this._startedAt == null) return false;
@@ -52,5 +56,6 @@ namespace ComAbilities.Types
             DateTimeOffset now = new DateTimeOffset();
             return (now.ToUnixTimeMilliseconds() - _startedAt.Value.ToUnixTimeMilliseconds() > _length);
         }
+
     }
 }

@@ -1,6 +1,5 @@
 ﻿namespace Exiled.ComAbilitiesEvents
 {
-    using AdminToys;
     using ComAbilities;
     using ComAbilities.Abilities;
     using ComAbilities.Objects;
@@ -9,24 +8,18 @@
     using Exiled.API.Enums;
     using Exiled.API.Extensions;
     using Exiled.API.Features;
+    using Exiled.API.Features.Doors;
     using Exiled.API.Features.Items;
-    using Exiled.API.Structs;
     using Exiled.Events.EventArgs.Interfaces;
     using Exiled.Events.EventArgs.Player;
-    using Exiled.Events.EventArgs.Scp079;
-    using HarmonyLib;
-    using MapGeneration;
+    using Interactables.Interobjects.DoorUtils;
     using MEC;
-    using Mirror;
     using PlayerRoles;
-    using PlayerRoles.PlayableScps.Scp079.GUI;
     using Scp914;
 
     // using PluginAPI.Core;
     using System.Collections.Generic;
     using UnityEngine;
-    using YamlDotNet.Core.Tokens;
-    using static UnityEngine.GraphicsBuffer;
     using KeycardPermissions = Interactables.Interobjects.DoorUtils.KeycardPermissions;
     using Scp079Role = API.Features.Roles.Scp079Role;
 
@@ -127,10 +120,7 @@
         {
             if (ev.Player == null || ev.Player.Role == null) return;
 
-            if (Instance.CompDict.Contains(ev.Player))
-            {
-                Instance.CompDict.Remove(ev.Player);
-            }
+            if (Instance.CompDict.Contains(ev.Player)) Instance.CompDict.Remove(ev.Player);
         }
 
         public void OnChangingRole(ChangingRoleEventArgs ev)
@@ -138,9 +128,9 @@
             if (ev.Player == null || ev.Player.Role == null) return;
 
             Player player = ev.Player;
-            if (Instance.CompDict.Contains(player) && !player.SessionVariables.ContainsKey(Hologram.SessionVariable))
+            if (!player.SessionVariables.ContainsKey(Hologram.SessionVariable))
             {
-                Instance.CompDict.Remove(player);
+                if (Instance.CompDict.Contains(ev.Player)) Instance.CompDict.Remove(ev.Player);
             }
 
             if (ev.NewRole == RoleTypeId.Scp079)
@@ -148,66 +138,60 @@
                 //  ev.Player.ReferenceHub.roleManager.ServerSetRole(RoleTypeId.Scp079, RoleChangeReason.RemoteAdmin);
                 Log.Debug("Player role is now 079 - attempting to create new CompDict");
                 Instance.CompDict.Add(player);
-                Timing.CallDelayed(3, () =>
-                {
-                    Scp079IntroCutscene.IsPlaying = false;
-                });
 
             }
         }
 
         public void OnSpawning(SpawningEventArgs ev)
         {
-            Round.TargetOffset -= 3;
-            Log.Debug(Round.TargetOffset);
-            Round.UpdateTargetCounter();
+            SetElement one = new(-500, "Hi<line-height=20px>\n\nHello");
+            SetElement two = new(500, "Hi<line-height=20px>\nAgain hi");
+            SetElement three = new(-700, "NewLine");
+
+            IEnumerable<Door> doors = Door.List.Where(x => x.Type == DoorType.Scp914Door);
+            foreach (Door door in doors)
+            {
+                try
+                {
+                   // ev.Player.SendFakeSyncVar(door.Base.netIdentity, typeof(DoorVariant), nameof(DoorVariant.NetworkTargetState), false);
+                } catch(Exception e)
+                {
+                    Log.Debug(e);
+                }
+            }
+
+            ev.Player.SendFakeSyncVar(Scp914Controller.Singleton.netIdentity, typeof(Scp914Controller), nameof(Scp914Controller.Network_knobSetting), Scp914KnobSetting.OneToOne);
+            MirrorExtensions.SendFakeTargetRpc(ev.Player, Scp914Controller.Singleton.netIdentity, typeof(Scp914Controller), nameof(Scp914Controller.RpcPlaySound), 1);
 
 
             Timing.CallDelayed(5, () =>
             {
                 Log.Debug("Showing display");
-                //try
-                //{
-                    PlayerDisplay display = new(ev.Player);
-                    display.CreateElement(-500, "<size=50px><line-height=20px>Player Displayer Example<br>New Lines");
-                    display.CreateElement(-200, "<size=40px>You are looking at an example");
-                //    display.CreateElement(-200, "<size=40px>Another eaxmpl e gasp");
-                    display.CreateElement(-700, "<align=left>pmnixls");
-                    Log.Debug("Hi chat");
-                    display.Update();
-          
-                //} catch(Exception e)
-                //{
-                //}
-            });
-            Timing.CallDelayed(10, () =>
-            {
                 try
                 {
-                    ev.Player.SendFakeSyncVar(Scp914Controller.Singleton.netIdentity, typeof(Scp914Controller), nameof(Scp914Controller.Network_knobSetting), Scp914KnobSetting.OneToOne);
+                    PlayerDisplay display = new(ev.Player);
+                    display.Add(one, two, three);
+                    display.Update();
                 } catch(Exception e)
                 {
                     Log.Debug(e);
                 }
-                PlayerDisplay display = new(ev.Player);
-                display.CreateElement(-500, "<size=50px><line-height=20px>Player Displayer Example\nNew Lines");
-                // display.CreateElement(-200, "<size=40px>You are looking at an example");
-                display.CreateElement(-200, "<size=40px>You are loo\nki\nng at an example");
-                display.CreateElement(-700, "<align=left>pmnixls");
-                Log.Debug("Hi chat");
-                display.Update();
-
-                //} catch(Exception e)
-                //{
-                //}
             });
-            //  Hint hint = new(sb.ToString(), 5000);
-            //  ev.Player.ShowHint(hint);
+
+            Timing.CallDelayed(15, () =>
+            {
+                PlayerDisplay display = new(ev.Player);
+                display.Add(one, two);
+                display.Update();
+            });
+
             if (ev.Player == null || ev.Player.Role == null) return;
+
             if (ev.Player.Role == RoleTypeId.Scp106 && ev.Player.SessionVariables.ContainsKey(Hologram.SessionVariable))
             {
                 ev.Player.AddItem(ItemType.Painkillers);
             }
+
             if (ev.Player.Role == RoleTypeId.Scp079)
             {
                 Timing.CallDelayed(15, () =>
@@ -248,7 +232,8 @@
                 {
                     ev.IsAllowed = false;
                     ev.Door.PlaySound(DoorBeepType.PermissionDenied);
-                    CompManager compManager = Instance.CompDict.GetOrError(player);
+
+                    CompManager compManager = Instance.CompDict.GetOrError(ev.Player);
                     compManager.TryShowErrorHint("- DOOR ACCESS DENIED -");
                 }
             }

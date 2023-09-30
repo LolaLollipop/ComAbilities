@@ -8,6 +8,7 @@ using Exiled.API.Features.Roles;
 using ComAbilities.Localizations;
 using MEC;
 using Exiled.API.Features.Doors;
+using ComAbilities.Types.RueTasks;
 
 namespace ComAbilities.Abilities
 {
@@ -98,13 +99,6 @@ namespace ComAbilities.Abilities
             }
         }
 
-        public int GetETA()
-        {
-            if (_cooldown == null) throw new Exception("Attempt to get ETA of a null rateLimitTask");
-            float? eta = _cooldown.GetETA();
-            if (!eta.HasValue) throw new Exception("Attempt to get ETA of a null rateLimitTask");
-            return (int)eta;
-        }
         public void ActivateConfirmation()
         {
             _expireConfirmation.Start(_timeUntilExpire);
@@ -112,9 +106,8 @@ namespace ComAbilities.Abilities
         internal void ChangeBack()
         {
             Player player = this.CompManager.AscPlayer;
-            this._cooldown.Start(_config.Cooldown);
-            this._hologramTask.AttemptKill();
-            //this._expireConfirmationTask.AttemptKill();
+            _cooldown.Start(_config.Cooldown);
+            _hologramTask.CleanUp();
 
             // player.Role.Set(RoleTypeId.Scp079); // setting twice avoids the animation
             // player.Role.Set(RoleTypeId.Scp079);
@@ -139,19 +132,17 @@ namespace ComAbilities.Abilities
         }
         internal void UpdateText()
         {
-            Log.Debug("Updating");
             Exiled.API.Features.Broadcast bc = new(GetHologramBroadcastText(CompManager.AscPlayer.Role), _broadcastTime, true, Broadcast.BroadcastFlags.Normal);
             CompManager.AscPlayer.Broadcast(bc, true);
         }
 
-        public override void KillTasks()
+        public override void CleanUp()
         {
             CompManager.AscPlayer.SessionVariables.Remove(Hologram.SessionVariable);
+            _hologramTask.CleanUp();
         }
 
-        private void OnFinished()
-        {
-        }
+        public float GetDisplayETA() => _cooldown.GetDisplayETA();
 
         private static float GetLowestAux()
         {

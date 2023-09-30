@@ -9,26 +9,31 @@ namespace ComAbilities.Objects
     using System.Data;
     using System.Globalization;
     using System.Text;
+    using System.Diagnostics.CodeAnalysis;
+    using global::ComAbilities.Types.RueTasks;
 
     /// <summary>
     /// Manages all plugin-related things for a certain player
     /// </summary>
-    public sealed class CompManager : IHotkeyHandler
+    public sealed class CompManager : IHotkeyHandler, IKillable
     {
         private readonly ComAbilities Instance = ComAbilities.Instance;
+
+        private static Dictionary<Player, CompManager> playerComputers { get; } = new();
+
         public Player AscPlayer { get; private set; }
         public Scp079Role? Role => AscPlayer.Role as Scp079Role;
 
         public List<Ability> AbilityInstances { get; private set; } = new();
         public DisplayManager<DisplayTypes, Elements> DisplayManager { get; private set; }
-      //  private HotkeyModule HotkeyModule { get; set; } = new();
-            
+        //  private HotkeyModule HotkeyModule { get; set; } = new();
+
         public List<IReductionAbility> ActiveAbilities { get; private set; } = new();
 
         private Dictionary<AllHotkeys, IHotkeyAbility> _hotkeysDict { get; set; } = new();
 
         private const float RateLimit = 4;
-        private Cooldown _errorCooldown { get; } = new(); 
+        private Cooldown _errorCooldown { get; } = new();
         private UpdateTask _messageTask { get; }
 
         // abilities    
@@ -70,7 +75,7 @@ namespace ComAbilities.Objects
                 .CreateElement(Elements.Message, out Element? _, 1)
                 .CreateElement(Elements.Trackers, out Element? _, 6)
                 .CreateElement(Elements.ActiveAbilities, out Element? _, 7);
-                
+
 
             Log.Debug("Registering UI");
             this.DisplayManager.AddScreen(DisplayTypes.Main)
@@ -107,7 +112,8 @@ namespace ComAbilities.Objects
             return ability;
         }
 
-        public void HandleInput(AllHotkeys hotkey) {
+        public void HandleInput(AllHotkeys hotkey)
+        {
             if (Role == null) return;
             if (Guards.SignalLost(Role)) return;
 
@@ -121,7 +127,8 @@ namespace ComAbilities.Objects
 
             if (ability is ICooldownAbility rateLimitedAbility)
             {
-                if (Guards.OnCooldown(rateLimitedAbility, out string errorCooldown)) {
+                if (Guards.OnCooldown(rateLimitedAbility, out string errorCooldown))
+                {
                     TryShowErrorHint(errorCooldown);
                     return;
                 }
@@ -133,18 +140,6 @@ namespace ComAbilities.Objects
             }
             ability.Trigger();
         }
-        public void KillAll()
-        {
-            Log.Debug("Cleaning up");
-            foreach (Ability ability in AbilityInstances)
-            {
-                ability.KillTasks();
-            }
-            this.ActiveAbilities.Clear();
-
-            //this.DisplayManager.CleanUp();
-        }
-
 
         public void DeductAux(float cost)
         {
@@ -176,7 +171,7 @@ namespace ComAbilities.Objects
             }
             stringBuilder.Append("</color></voffset></size></align></line-height>");
             DisplayManager.SetElement(Elements.AvailableAbilities, stringBuilder.ToString());
-        }   
+        }
         public IEnumerable<Ability> GetNewAbilities(int currentLevel)
         {
             return this.AbilityInstances.Where(x => x.ReqLevel == currentLevel);
@@ -197,7 +192,8 @@ namespace ComAbilities.Objects
             if (regenSpeed == 0)
             {
                 sb.Append(Instance.Localization.Shared.NoAuxRegen);
-            } else
+            }
+            else
             {
                 float percent = (float)Math.Round(regenSpeed / Role.AuxManager._regenerationPerTier[Role.Level] * 100, 3);
                 sb.Append(string.Format(Instance.Localization.Shared.RegenSpeedFormat, percent));
@@ -208,15 +204,68 @@ namespace ComAbilities.Objects
             DisplayManager.Update(DisplayTypes.Main);
         }
 
+        /// <summary>
+        /// Generates an aux ETA for a <see cref="Scp079Role"/>.
+        /// </summary>
+        /// <param name="role">The role to generate the ETA for </param>
+        /// <param name="cost">The aux cost</param>
+        /// <returns></returns>
         public static float GetETA(Scp079Role role, float cost)
         {
-            if (role == null) throw new Exception("No role");
             if (cost <= role.Energy) return 0.5f;
             float regenSpeed = role.EnergyRegenerationSpeed;
             return (float)Math.Max(0.5, (role.Energy - cost) / regenSpeed);
         }
 
-    }
+        public void CleanUp()
+        {
+            Log.Debug("Cleaning up");
+            foreach (Ability ability in AbilityInstances)
+            {
+                ability.CleanUp();
+            }
+            this.ActiveAbilities.Clear();
+        }
+        /*
+/// <summary>
+/// Gets a CompManager from aplayer
+/// </summary>
+/// <param name="player">The player to get the CompManager for</param>
+/// <returns></returns>
+public static CompManager Get(Player player) => CompManager.playerComputers[player];
 
+/// <summary>
+/// Attempts to get a CompManager from a player
+/// </summary>
+/// <param name="player">The player to get the CompManager for</param>
+/// <param name="compManager">The returned CompManager</param>
+/// <returns>A bool indicating whether or not the player exists in the dictionary</returns>
+public static bool TryGet(Player player, out CompManager compManager) => CompManager.playerComputers.TryGetValue(player, out compManager);
+
+/// <summary>
+/// Removes a CompManager from a player
+/// </summary>
+/// <param name="player">The player to remove the CompManager from</param>
+public static void Remove(Player player)
+{
+   CompManager.playerComputers[player].KillAll();
+   CompManager.playerComputers.Remove(player);
+}
+
+/// <summary>
+/// Creates a new CompManager and adds it to the dictionary
+/// </summary>
+/// <param name="player"></param>
+public static void Add(Player player) => CompManager.playerComputers.Add(player, new CompManager(player));
+
+/// <summary>
+/// Attempts to remove a CompManager from a player
+/// </summary>
+/// <param name="player">The player to remove the CompManager from</param>
+public static void TryRemove(Player player)
+{
+   if (CompManager.playerComputers.ContainsKey(player)) Remove(player);
+} */
+    }
 }
     

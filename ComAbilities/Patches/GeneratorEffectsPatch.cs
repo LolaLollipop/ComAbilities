@@ -1,14 +1,5 @@
-﻿using Exiled.API.Features;
-using HarmonyLib;
+﻿using HarmonyLib;
 using MapGeneration.Distributors;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ComAbilities;
-using Exiled.Loader;
-using PlayerRoles;
 using ComAbilities.Objects;
 
 namespace ComAbilities.Patches
@@ -19,7 +10,7 @@ namespace ComAbilities.Patches
         [HarmonyPostfix]
         private static void Postfix(Scp079Generator __instance)
         {
-            GeneratorEffects.Update();
+            GeneratorEffects.Singleton.Update();
         }
     }
 }   

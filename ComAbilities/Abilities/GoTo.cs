@@ -67,15 +67,9 @@ namespace ComAbilities.Abilities
             }
         }
 
-        public int GetETA()
-        {
-            if (_cooldown == null) throw new Exception("Attempt to get ETA of a null rateLimitTask");
-            float? eta = _cooldown.GetETA();
-            if (!eta.HasValue) throw new Exception("Attempt to get ETA of a null rateLimitTask");
-            return (int)eta;
-        }
+        public float GetDisplayETA() => _cooldown.GetDisplayETA();
 
-        public override void KillTasks()
+        public override void CleanUp()
         {
             // _cooldownTask.AttemptKill();
         }

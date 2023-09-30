@@ -38,13 +38,13 @@ public static class VoiceTransceiverPatch
 
         foreach (CodeInstruction instruction in newInstructions)
             yield return instruction;
-
+        
         ListPool<CodeInstruction>.Shared.Return(newInstructions);
     }
 
 }
 
-/* 
+/* ww
  *     [HarmonyPatch(typeof(Scp079VoiceModule), nameof(Scp079VoiceModule.CurrentChannel), MethodType.Getter)]
     internal static class Radio2
     {

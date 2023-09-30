@@ -1,6 +1,7 @@
 ﻿using ComAbilities.Localizations;
 using ComAbilities.Objects;
 using ComAbilities.Types;
+using ComAbilities.Types.RueTasks;
 using Exiled.API.Features;
 using Exiled.API.Features.Roles;
 using PlayerRoles.PlayableScps.HumeShield;
@@ -84,22 +85,17 @@ namespace ComAbilities.Abilities
                 }
             }
         }
-        public int GetETA()
-        {
-            if (_cooldown == null) throw new Exception("Attempt to get ETA of a null rateLimitTask");
-            long? eta = (long?)_cooldown.GetETA();
-            if (!eta.HasValue) throw new Exception("Attempt to get ETA of a null rateLimitTask");
-            return (int)eta;
-        }
+        public float GetDisplayETA() => _cooldown.GetDisplayETA();
+
         public void OnFinished()
         {
             _cooldown.Start(CooldownLength);
             CompManager.ActiveAbilities.Remove(this);
         }
 
-        public override void KillTasks()
+        public override void CleanUp()
         {
-            _regenHumeTask.AttemptKill();
+            _regenHumeTask.CleanUp();
         }
     }
 }
