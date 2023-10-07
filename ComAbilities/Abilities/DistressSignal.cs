@@ -9,7 +9,6 @@ namespace ComAbilities.Abilities
     //[Hotkey]
     public sealed class DistressSignal : Ability, ICooldownAbility
     {
-        private readonly static ComAbilities Instance = ComAbilities.Instance;
         private static DistressSignalT DistressSignalT => Instance.Localization.DistressSignal;
         private static DistressSignalConfig _config => Instance.Config.DistressSignal;
 

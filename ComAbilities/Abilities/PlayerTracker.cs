@@ -13,13 +13,19 @@ namespace ComAbilities.Abilities
     //[Hotkey]
     public sealed class PlayerTracker : Ability, IHotkeyAbility, IReductionAbility, ICooldownAbility
     {
-
-        private readonly static ComAbilities Instance = ComAbilities.Instance;
         private readonly static TrackerT TrackerT = Instance.Localization.Tracker;
 
         private static PlayerTrackerConfig _config => Instance.Config.PlayerTracker;
 
-        public PlayerTracker(CompManager compManager) : base(compManager) { }
+        private readonly Cooldown _cooldown = new();
+        //public bool InterfaceActive => CompManager.DisplayManager.SelectedScreen == DisplayTypes.Tracker;
+
+        public PlayerTracker(CompManager compManager) : base(compManager) {
+            Trackers = new() {
+                new ActiveTracker(_config.Length, UpdateUI, ReqLevel),
+                new ActiveTracker(_config.Length, UpdateUI, _config.Slot2Level)
+            };
+        }
         public override string Name { get; } = TrackerT.Name;
         public override string Description { get; } = TrackerT.Description;
        // public string UsageGuide { get; } = "Once you open the Tracker menu, you can select a tracker slot. Afterwards, ping a person to begin tracking them in that slot. Once you start tracking a person, you can run .goto [slot] to instantly move your camera to the person. However, for every active tracker, your regeneration rate will decrease.";
@@ -27,44 +33,42 @@ namespace ComAbilities.Abilities
         public override float AuxCost { get; } = _config.AuxCost;
         public override int ReqLevel { get; } = _config.Level;
         public override string DisplayText => string.Format(TrackerT.DisplayText, Instance.Localization.Shared.Hotkeys[HotkeyButton].ToUpper(), AuxCost);
-        public string ActiveDisplayText => string.Format(TrackerT.ActiveDisplayText, _trackers.Count(x => x.Enabled));
+        public string ActiveDisplayText => string.Format(TrackerT.ActiveDisplayText, Trackers.Count(x => x.Enabled));
         public override bool Enabled => _config.Enabled;
 
         public float AuxModifier => (float)Math.Pow(_config.AuxMultiplier,
-            Math.Min(1, _trackers.Count(x => x.Enabled)));
+            Math.Min(1, Trackers.Count(x => x.Enabled)));
 
         public AllHotkeys HotkeyButton { get; } = _config.Hotkey;
 
         public float CooldownLength { get; } = _config.Cooldown;
         public bool OnCooldown => _cooldown.Active;
 
-        public bool IsActive => _trackers.Any(x => x.Player != null && x.Enabled);
+        public bool IsActive => Trackers.Any(x => x.Player != null && x.Enabled);
+
+        public TrackerManager Trackers { get; }
 
         //public bool IsGettingPlayer => _expireTrackerTask.Enabled;
-
-        private Cooldown _cooldown { get; } = new();
-        //public bool InterfaceActive => CompManager.DisplayManager.SelectedScreen == DisplayTypes.Tracker;
-        private TrackerManager _trackers => new() {
-            new ActiveTracker(_config.Length, UpdateUI, ReqLevel),
-            new ActiveTracker(_config.Length, UpdateUI, _config.Slot2Level)
-        };
         // --------------------
 
         public void Trigger()
         {
-            if (CompManager.DisplayManager.SelectedScreen == DisplayTypes.Tracker)
+            if (base.Display.CurrentScreen == Screens.Tracker)
             {
-                CompManager.DisplayManager.SetScreen(DisplayTypes.Main);
+                Display.CurrentScreen = Screens.Tracker;
             }
             else
             {
-                CompManager.DisplayManager.SetScreen(DisplayTypes.Tracker);
+                Display.CurrentScreen = Screens.Tracker;
             }
+
+            Display.Update();
         }
 
-        public void SetSelectedTracker(Player player)
+        public void AssignToSelectedTracker(Player player)
         {
-            _trackers.StartSelected(player);
+            Trackers.StartSelected(player);
+
             _cooldown.Start(CooldownLength);
             CompManager.DeductAux(AuxCost);
 
@@ -74,25 +78,25 @@ namespace ComAbilities.Abilities
         public void UpdateUI()
         {
             StringBuilder sb = new();
-            sb.Append(_trackers.ConvertToHintString());
+            sb.Append(Trackers.ConvertToHintString());
 
-            if (_trackers.GetState(_trackers.SelectedTracker) == TrackerState.Selected) 
+            if (Trackers.GetState(Trackers.SelectedTracker) == TrackerState.Selected) 
                 sb.Append("\n" + TrackerT.SelectedEmpty);
 
-            if (_trackers.GetState(_trackers.SelectedTracker) == TrackerState.SelectedFull) 
+            if (Trackers.GetState(Trackers.SelectedTracker) == TrackerState.SelectedFull) 
                 sb.Append("\n" + TrackerT.SelectedFull);
 
             sb.Append("\n" + TrackerT.CloseMessage);
 
-            CompManager.DisplayManager.SetElement(Elements.Trackers, sb.ToString());
-            CompManager.DisplayManager.Update(DisplayTypes.Tracker);
+            Display.TrackerElement.Set(sb.ToString());
+            Display.Update(Screens.Tracker);
         }
 
         public float GetDisplayETA() => _cooldown.GetDisplayETA();
 
         public bool TryGetTrackerPlayer(int trackerId, out Player player)
         {
-            ActiveTracker? activeTracker = _trackers[trackerId];
+            ActiveTracker? activeTracker = Trackers[trackerId];
             if (activeTracker == null || activeTracker.Player == null)
             {
                 player = default;
@@ -108,32 +112,32 @@ namespace ComAbilities.Abilities
             switch (hotkey)
             {
                 case AllHotkeys.HoldReload:
-                    if (_trackers.SelectedTracker != -1 && _trackers[_trackers.SelectedTracker].Enabled)
+                    if (Trackers.SelectedTracker != -1 && Trackers[Trackers.SelectedTracker].Enabled)
                     {
-                        _trackers[_trackers.SelectedTracker].CleanUp();
+                        Trackers[Trackers.SelectedTracker].CleanUp();
                     }
                     break;
                         
                 case AllHotkeys.Reload:
-                    if (_trackers.SelectedTracker == _trackers.Count - 1)
+                    if (Trackers.SelectedTracker == Trackers.Count - 1)
                     {
-                        _trackers.SelectedTracker = 0;
+                        Trackers.SelectedTracker = 0;
                     } else
                     {
-                        _trackers.SelectedTracker++;
+                        Trackers.SelectedTracker++;
                     }
                     UpdateUI();
                     break;
                 case AllHotkeys.Throw:
-                    CompManager.DisplayManager.SetScreen(DisplayTypes.Main);
-                    CompManager.DisplayManager.Update();
+                    CompManager.Display.CurrentScreen = Screens.Tracker;
+                    CompManager.Display.Update();
                     break;
             }
         }
 
         public override void CleanUp()
         {
-            _trackers.CleanUp();
+            Trackers.CleanUp();
         }
         /*public void HandleInputs(AllHotkeys? hotkey)
         {

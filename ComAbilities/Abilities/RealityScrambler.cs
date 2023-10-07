@@ -11,11 +11,18 @@ namespace ComAbilities.Abilities
     //[Hotkey]
     public sealed class RealityScrambler : Ability, IHotkeyAbility, IReductionAbility, ICooldownAbility
     {
-        private static readonly ComAbilities Instance = ComAbilities.Instance;
         private static RealityScramblerT RealityScramblerT = Instance.Localization.RealityScrambler;
         private static RealityScramblerConfig _config { get; } = Instance.Config.RealityScrambler;
+
+        private string BroadcastText = _config.BroadcastText;
+        private readonly Cooldown _cooldown = new();
+        private readonly PeriodicTask _regenHumeTask;
+
+        private const int minTimeToCancel = 3000;
+
         public RealityScrambler(CompManager compManager) : base(compManager)
         {
+            _regenHumeTask = new(_config.Length, _config.TickTime, HumeRegen, OnFinished);
         }
 
 
@@ -37,15 +44,11 @@ namespace ComAbilities.Abilities
         public bool IsActive => _regenHumeTask.Enabled;
 
         public float CooldownLength { get; } = _config.Cooldown;
-        private string BroadcastText { get; } = _config.BroadcastText;
-
-        private Cooldown _cooldown { get; } = new();
-        private PeriodicTask _regenHumeTask => new(_config.Length, _config.TickTime, HumeRegen, OnFinished);
 
         public void Toggle()
         {
             // 3 second delay before it can be turned off 
-            if (_regenHumeTask.Enabled && _regenHumeTask.RunningFor() > 3000) // 3 seconds
+            if (_regenHumeTask.Enabled && _regenHumeTask.RunningFor() > minTimeToCancel)
             {
                 _regenHumeTask.Interrupt();
             } else if (!_regenHumeTask.Enabled)

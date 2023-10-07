@@ -28,15 +28,15 @@ namespace ComAbilities.Commands
 
         private readonly static ComAbilities Instance = ComAbilities.Instance;
 
-        public static BroadcastMessageConfig _config => Instance.Config.BroadcastMessage;
 
-        private readonly static BroadcastMessageT BroadcastMessageT = Instance.Localization.BroadcastMessage;
-        private readonly static SharedT SharedT = Instance.Localization.Shared;
+        private static BroadcastMessageT BroadcastMessageT => Instance.Localization.BroadcastMessage;
+        private static SharedT SharedT => Instance.Localization.Shared;
+        private static BroadcastMessageConfig config => Instance.Config.BroadcastMessage;
 
         public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
         {
             Player player = Player.Get(sender);
-            if (Guards.NotEnabled(_config, out response)) return false;
+            if (Guards.NotEnabled(config, out response)) return false;
             if (Guards.NotComputer(player.Role, out response)) return false;
 
             CompManager comp = Instance.CompDict.GetOrError(player);
@@ -56,7 +56,7 @@ namespace ComAbilities.Commands
             }
 
             bc.Trigger(string.Join(" ", arguments));
-            response = string.Format(BroadcastMessageT.Success, _config.Cooldown);
+            response = string.Format(BroadcastMessageT.Success, config.Cooldown);
             return true;
         }
     }

@@ -1,24 +1,14 @@
 ﻿using ComAbilities.Localizations;
 using ComAbilities.Objects;
 using ComAbilities.Types.RueTasks;
-using Exiled.API.Enums;
 using Exiled.API.Features;
-using MEC;
-using PlayerRoles;
-using System;
-using System.CodeDom;
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace ComAbilities.Types
 {
     public sealed class TrackerManager : List<ActiveTracker>, IKillable
     {
-        private static readonly ComAbilities Instance = ComAbilities.Instance;
+        private static ComAbilities Instance => ComAbilities.Instance;
 
         private static TrackerT TrackerT => Instance.Localization.Tracker;
         private static SharedT SharedT => Instance.Localization.Shared;
@@ -110,12 +100,13 @@ namespace ComAbilities.Types
     }
     public class ActiveTracker : IKillable
     {
+        private readonly UpdateTask _expireTask;
+        private readonly Action _killer;
+
         public Player? Player { get; private set; }
         public int Level { get; }
         public bool Enabled => _expireTask.IsRunning;
 
-        private UpdateTask _expireTask { get; }
-        private Action _killer { get; }
         public ActiveTracker(float duration, Action killer, int level)
         {
             _killer = killer;

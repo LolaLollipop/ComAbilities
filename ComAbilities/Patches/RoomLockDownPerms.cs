@@ -3,6 +3,9 @@ using HarmonyLib;
 using PlayerRoles.PlayableScps.Scp079;
 using KeycardPermissions = Interactables.Interobjects.DoorUtils.KeycardPermissions;
 using Interactables.Interobjects.DoorUtils;
+using ComAbilities.Objects;
+using Exiled.API.Enums;
+using Exiled.API.Features.Doors;
 
 namespace ComAbilities.Patches
 {
@@ -13,30 +16,18 @@ namespace ComAbilities.Patches
         private static bool ValidDoor(ReferenceHub refHub, DoorVariant door)
         {
             if (!Instance.Config.DoComputerPerms) return true;
-            try
-            {
-                Player player = Player.Get(refHub);
-                KeycardPermissions computerPermissions = new();
-                KeycardPermissions doorPerms = door.RequiredPermissions.RequiredPermissions;
-                int accessLevel = player.Role.As<Exiled.API.Features.Roles.Scp079Role>().Level;
-                foreach (KeyValuePair<KeycardPermissions, int> pair in Instance.Config.DoorPermissions)
-                {
-                    if (accessLevel >= pair.Value)
-                    {
-                        computerPermissions |= pair.Key;
-                    }
-                }
+            Player player = Player.Get(refHub);
+            CompManager manager = Instance.CompDict.GetOrError(player);
 
-                if (!computerPermissions.HasFlag(doorPerms))
-                {
-                    return false;
-                }   
-                return true;
-            } catch(Exception e)
+            KeycardPermissions doorPerms = door.RequiredPermissions.RequiredPermissions;
+            if (!manager.CachedKeycardPermissions.HasFlag(doorPerms))
             {
-                Log.Debug(e);
+                Door.Get(door).PlaySound(DoorBeepType.PermissionDenied);
+                manager.ShowErrorHint(Instance.Localization.Errors.DisplayAccessDenied);
+
                 return false;
             }
+            return true;
         }
         private static bool Prefix(Scp079LockdownRoomAbility __instance, DoorVariant dv)
         {

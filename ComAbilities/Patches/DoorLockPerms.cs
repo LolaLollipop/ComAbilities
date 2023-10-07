@@ -22,50 +22,36 @@ namespace ComAbilities.Patches
         private static bool ValidDoor(ReferenceHub refHub, DoorVariant door)
         {
             if (!Instance.Config.DoComputerPerms) return true;
-            try
-            {
-                Player player = Player.Get(refHub);
-                KeycardPermissions computerPermissions = new();
-                KeycardPermissions doorPerms = door.RequiredPermissions.RequiredPermissions;
-                int accessLevel = player.Role.As<Exiled.API.Features.Roles.Scp079Role>().Level;
-                foreach (KeyValuePair<KeycardPermissions, int> pair in Instance.Config.DoorPermissions)
-                {
-                    if (accessLevel >= pair.Value)
-                    {
-                        computerPermissions |= pair.Key;
-                    }
-                }
+            Player player = Player.Get(refHub);
+            CompManager manager = Instance.CompDict.GetOrError(player);
 
-                if (!computerPermissions.HasFlag(doorPerms))
-                {
-                    Door.Get(door).PlaySound(DoorBeepType.PermissionDenied);
-                    CompManager compManager = Instance.CompDict.GetOrError(player);
-                    compManager.TryShowErrorHint(Instance.Localization.Errors.DisplayAccessDenied);
-
-                    return false;
-                }   
-                return true;
-            } catch(Exception e)
+            KeycardPermissions doorPerms = door.RequiredPermissions.RequiredPermissions;
+            if (!manager.CachedKeycardPermissions.HasFlag(doorPerms))
             {
-                Log.Debug(e);
+                Door.Get(door).PlaySound(DoorBeepType.PermissionDenied);
+                manager.ShowErrorHint(Instance.Localization.Errors.DisplayAccessDenied);
+
                 return false;
             }
+            return true;
         }
         private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
         {
             List<CodeInstruction> newInstructions = ListPool<CodeInstruction>.Shared.Rent(instructions);
 
             int index = newInstructions.FindIndex(instruction =>
-            instruction.opcode == OpCodes.Call
-            && (MethodInfo)instruction.operand == PropertyGetter(typeof(Scp079AbilityBase), nameof(Scp079AbilityBase.LostSignalHandler)));
+                instruction.opcode == OpCodes.Call
+                && (MethodInfo)instruction.operand == PropertyGetter(typeof(Scp079AbilityBase), nameof(Scp079AbilityBase.LostSignalHandler)));
+
             index -= 1;
 
             Label returnLabel = generator.DefineLabel();
 
             Collection<CodeInstruction> collection = new()
             {
-                new CodeInstruction(OpCodes.Ldarg_0).MoveLabelsFrom(newInstructions[index]),
+                new CodeInstruction(OpCodes.Ldarg_0),
                 // if (!ValidateDoor(this.LastDoor, base.Owner)) return;
+                
                 new(OpCodes.Callvirt, PropertyGetter(typeof(Scp079DoorLockChanger), nameof(Scp079DoorLockChanger.Owner))),
                 new(OpCodes.Ldarg_0),
                 new(OpCodes.Ldfld, Field(typeof(Scp079DoorLockChanger), nameof(Scp079DoorLockChanger.LastDoor))),

@@ -29,6 +29,7 @@ namespace ComAbilities.Localizations
         [Description("{0}: aux regen rate")]
         public string RegenSpeedFormat { get; set; } = "TOTAL AUX REGENERATION RATE {0}%";
         public string NoAuxRegen { get; set; } = "AUX REGENERATION SUSPENDED";
+        public string AvailableAbilities { get; set; } = "AVAILABLE ABILITIES<br>PRESS TAB TO USE<br>HOTKEY ABILITIES OR<br>~ TO USE CONSOLE ABILITIES";
 
         public Dictionary<AllHotkeys, string> Hotkeys { get; set; } = new()
         {

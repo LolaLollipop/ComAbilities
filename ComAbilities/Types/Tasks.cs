@@ -1,10 +1,7 @@
 ﻿// A way to handle coroutine safely (ensures that they don't keep running)
 namespace ComAbilities.Types.RueTasks
 {
-    using Exiled.API.Features;
-    using global::ComAbilities.UI;
     using MEC;
-    using System.Diagnostics.CodeAnalysis;
 
     public static class MECExtensions
     {
@@ -18,14 +15,14 @@ namespace ComAbilities.Types.RueTasks
     /// </summary>
     public class PeriodicTask : TaskBase
     {
-        public bool Enabled => (CH != null) && Timing.IsRunning((CoroutineHandle)CH); 
+        public bool Enabled => (CH != null) && Timing.IsRunning(CH.Value); 
 
         public float Interval { get; private set; }
         public Action Action { get; private set; }
         public Action? OnFinished { get; private set; }
         public bool PersistGC { get; set; } = false;
 
-        private CoroutineHandle? Killer { get; set; }
+        private CoroutineHandle? killer;
 
         public PeriodicTask(float time, float interval, Action action, Action? onFinished = null)
         {
@@ -38,14 +35,14 @@ namespace ComAbilities.Types.RueTasks
         ~PeriodicTask()
         {
             if (PersistGC) return;
-            if (Killer != null) Timing.KillCoroutines(Killer.Value);
+            if (killer != null) Timing.KillCoroutines(killer.Value);
             if (CH != null) Timing.KillCoroutines(CH.Value);
         }
 
         public override CoroutineHandle Run(float? time = null)
         {
-            
-            Killer = Timing.CallDelayed(time ?? Time, () =>
+
+            killer = Timing.CallDelayed(time ?? Time, () =>
             {
                 CH?.Kill();
                 OnEnd();
@@ -57,7 +54,6 @@ namespace ComAbilities.Types.RueTasks
         {
             while (true)
             {
-                Log.Debug("RUNNING");
                 action();
                 yield return Timing.WaitForSeconds(interval);
             }
@@ -73,7 +69,7 @@ namespace ComAbilities.Types.RueTasks
         }
         public override void CleanUp()
         {
-            Killer?.Kill();
+            killer?.Kill();
             base.CleanUp();
         }
     }
@@ -87,14 +83,14 @@ namespace ComAbilities.Types.RueTasks
         public Action EndAction { get; }
         public bool PersistGC { get; set; } = false;
 
-        ~UpdateTask() {
-            if (CH != null) Timing.KillCoroutines(CH.Value);
-        }
-
         public UpdateTask(float time, Action endAction)
         {
             Time = time;
             EndAction = endAction;
+        }
+        ~UpdateTask()
+        {
+            if (CH != null) Timing.KillCoroutines(CH.Value);
         }
 
         public override CoroutineHandle Run(float? time = null)

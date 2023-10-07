@@ -10,7 +10,7 @@
     using PlayerRoles;
     using UnityEngine;
     using UnityEngine.Windows;
-    using KeycardPermissions = Interactables.Interobjects.DoorUtils.KeycardPermissions;
+    using KeycardPermissions = Exiled.API.Enums.KeycardPermissions;
 
     public sealed class Config : IConfig
     {
@@ -32,6 +32,7 @@
         public bool LCZCountdownLock { get; set; } = true;
         public bool DoComputerPerms { get; set; } = true;
         [Description("The level that 079 gets each keycard permission")]
+
         public Dictionary<KeycardPermissions, int> DoorPermissions { get; set; } = new()
         {
             { KeycardPermissions.ContainmentLevelOne, 1 },

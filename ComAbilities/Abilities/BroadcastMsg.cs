@@ -7,8 +7,6 @@ namespace ComAbilities.Abilities
 {
     public sealed class BroadcastMsg : Ability, ICooldownAbility
     {
-        private readonly static ComAbilities Instance = ComAbilities.Instance;
-
         private static BroadcastMessageT BroadcastMessageT => Instance.Localization.BroadcastMessage;
         private static BroadcastMessageConfig _config => Instance.Config.BroadcastMessage;
 

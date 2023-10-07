@@ -11,30 +11,31 @@ namespace ComAbilities.Objects
     using System.Text;
     using System.Diagnostics.CodeAnalysis;
     using global::ComAbilities.Types.RueTasks;
+    using RueI;
 
     /// <summary>
     /// Manages all plugin-related things for a certain player
     /// </summary>
     public sealed class CompManager : IHotkeyHandler, IKillable
     {
-        private readonly ComAbilities Instance = ComAbilities.Instance;
+        private static ComAbilities Instance => ComAbilities.Instance;
 
-        private static Dictionary<Player, CompManager> playerComputers { get; } = new();
+        private const int TimeToShowMessages = 5;
+        private const int MESSAGE_RATE_LIMIT = 6;
 
-        public Player AscPlayer { get; private set; }
+        private readonly Dictionary<AllHotkeys, IHotkeyAbility> _hotkeysDict = new();
+        private readonly Cooldown _errorCooldown = new();
+        private readonly UpdateTask _messageTask;
+
+        public Player AscPlayer { get; }
         public Scp079Role? Role => AscPlayer.Role as Scp079Role;
 
-        public List<Ability> AbilityInstances { get; private set; } = new();
-        public DisplayManager<DisplayTypes, Elements> DisplayManager { get; private set; }
-        //  private HotkeyModule HotkeyModule { get; set; } = new();
+        public List<Ability> AbilityInstances { get; } = new();
+        public DisplayManager Display { get; }
+        
+        public List<IReductionAbility> ActiveAbilities { get; } = new();
 
-        public List<IReductionAbility> ActiveAbilities { get; private set; } = new();
-
-        private Dictionary<AllHotkeys, IHotkeyAbility> _hotkeysDict { get; set; } = new();
-
-        private const float RateLimit = 4;
-        private Cooldown _errorCooldown { get; } = new();
-        private UpdateTask _messageTask { get; }
+        public KeycardPermissions CachedKeycardPermissions { get; private set; } = new();
 
         // abilities    
         public RealityScrambler RealityScrambler { get; }
@@ -45,19 +46,17 @@ namespace ComAbilities.Objects
         public RadioScanner RadioScanner { get; }
         public BroadcastMsg BroadcastMessage { get; }
 
-
-        private int _timeToShowMessages { get; } = 5;
-
         // constructor
         public CompManager(Player player)
         {
             Log.Debug("Creating a new CompManager for " + player);
-            this.DisplayManager = new(player);
+            this.Display = new(this);
             this.AscPlayer = player;
 
-            _messageTask = new(_timeToShowMessages, () =>
+            _messageTask = new(TimeToShowMessages, () =>
             {
-                DisplayManager.SetElement(Elements.Message, " ");
+                Display.MessageElement.Set(string.Empty);
+                Display.Update();
             });
 
 
@@ -70,9 +69,9 @@ namespace ComAbilities.Objects
             this.RadioScanner = RegisterAbility<RadioScanner>();
             this.BroadcastMessage = RegisterAbility<BroadcastMsg>();
 
-            this.DisplayManager
+           /* this.DisplayManager
                 .CreateElement(Elements.AvailableAbilities, out Element? _, 10)
-                .CreateElement(Elements.Message, out Element? _, 1)
+                .CreateElement(Elements.Message, out Element? _, lines: 1)
                 .CreateElement(Elements.Trackers, out Element? _, 6)
                 .CreateElement(Elements.ActiveAbilities, out Element? _, 7);
 
@@ -92,7 +91,7 @@ namespace ComAbilities.Objects
                 .AddString("</size></color></b></voffset></align>")
                 .AddString("<size=50%><align=center><line-height=20%><voffset=-7em>PLAYER TRACKER<br>SELECT A SLOT TO BEGIN TRACKING")
                 .AddElement(Elements.Trackers, 6)
-                .AddString("</color></voffset></size></align></line-height>");
+                .AddString("</color></voffset></size></align></line-height>"); */
 
 
             Log.Debug("All done");
@@ -117,7 +116,7 @@ namespace ComAbilities.Objects
             if (Role == null) return;
             if (Guards.SignalLost(Role)) return;
 
-            if (DisplayManager.SelectedScreen == DisplayTypes.Tracker)
+            if (Display.CurrentScreen == Screens.Tracker)
             {
                 this.PlayerTracker.HandleInputs(hotkey);
                 return;
@@ -128,14 +127,14 @@ namespace ComAbilities.Objects
             if (ability is ICooldownAbility rateLimitedAbility)
             {
                 if (Guards.OnCooldown(rateLimitedAbility, out string errorCooldown))
-                {
-                    TryShowErrorHint(errorCooldown);
+                {   
+                    ShowErrorHint(errorCooldown);
                     return;
                 }
             }
             if (Guards.NotEnoughAuxDisplay(Role, ability.AuxCost, out string response))
             {
-                TryShowErrorHint(response);
+                ShowErrorHint(response);
                 return;
             }
             ability.Trigger();
@@ -146,45 +145,26 @@ namespace ComAbilities.Objects
             if (this.Role == null) throw new Exception("No role");
             this.Role.Energy -= cost;
         }
-        public void TryShowErrorHint(string errorString)
+
+        public void ShowErrorHint(string errorString)
         {
             if (!_errorCooldown.Active)
             {
-                DisplayManager.SetElement(Elements.Message, errorString);
-                DisplayManager.Update();
+                Display.MessageElement.Set(errorString);
+                Display.Update();
 
-                _errorCooldown.Start(RateLimit);
+                _errorCooldown.Start(TimeToShowMessages);
                 _messageTask.Run();
             }
         }
 
-        public void QueueAvailableAbilityHints(int currentLevel)
-        {
-            StringBuilder stringBuilder = new("<align=right><size=50%><line-height=120%><voffset=10em><color=#adadad>AVAILABLE ABILITIES<br>PRESS TAB TO USE<br>HOTKEY ABILITIES OR<br>~ TO USE CONSOLE ABILITIES<br>");
-            Log.Debug("Testing");
-            foreach (Ability ability in AbilityInstances)
-            {
-                if (ability.ValidateLevel(currentLevel))
-                {
-                    stringBuilder.Append(ability.DisplayText + "<br>");
-                }
-            }
-            stringBuilder.Append("</color></voffset></size></align></line-height>");
-            DisplayManager.SetElement(Elements.AvailableAbilities, stringBuilder.ToString());
-        }
-        public IEnumerable<Ability> GetNewAbilities(int currentLevel)
-        {
-            return this.AbilityInstances.Where(x => x.ReqLevel == currentLevel);
-        }
+        public IEnumerable<Ability> GetNewAbilities(int currentLevel) => this.AbilityInstances.Where(x => x.ReqLevel == currentLevel);
 
-        public void QueueActiveAbilityHints()
+        public string GetActiveAbilityText()
         {
-            if (!this.ActiveAbilities.Any())
-            {
-                DisplayManager.SetElement(Elements.ActiveAbilities, "");
-            }
+            if (!this.ActiveAbilities.Any() || Role == null) return string.Empty;
 
-            double regenSpeed = this.Role!.AuxManager.RegenSpeed;
+            double regenSpeed = this.Role.AuxManager.RegenSpeed;
             StringBuilder sb = new();
 
             sb.Append("<color=#ad251c>");
@@ -196,21 +176,68 @@ namespace ComAbilities.Objects
             else
             {
                 float percent = (float)Math.Round(regenSpeed / Role.AuxManager._regenerationPerTier[Role.Level] * 100, 3);
-                sb.Append(string.Format(Instance.Localization.Shared.RegenSpeedFormat, percent));
+                sb.AppendFormat(Instance.Localization.Shared.RegenSpeedFormat, percent);
             }
-            sb.Append("</color>");
 
-            DisplayManager.SetElement(Elements.ActiveAbilities, sb.ToString());
-            DisplayManager.Update(DisplayTypes.Main);
+            return sb.ToString();
+
+            //DisplayManager.SetElement(Elements.ActiveAbilities, sb.ToString());
+            //DisplayManager.Update(DisplayTypes.Main);
+        }
+
+        public string GetAvailableAbilityText()
+        {
+            StringBuilder sb = new("<align=right><size=50%><line-height=120%><voffset=10em><color=#adadad>");
+            sb.Append(Instance.Localization.Shared.AvailableAbilities);
+            sb.Append("<br>");
+
+            if (Role == null) return sb.ToString();
+
+            foreach (Ability ability in AbilityInstances)
+            {
+                if (ability.ValidateLevel(Role.Level))
+                {
+                    sb.AppendLine(ability.DisplayText);
+                }
+            }
+            return sb.ToString();
+        }
+
+        public static KeycardPermissions CalculatePermissions(int curLevel)
+        {
+            Dictionary<KeycardPermissions, int> reqLevelsDict = Instance.Config.DoorPermissions;
+
+
+            KeycardPermissions newPerms = new();
+            IEnumerable<KeycardPermissions> permsList = Enum.GetValues(typeof(KeycardPermissions)).Cast<KeycardPermissions>();
+
+            foreach (KeycardPermissions perm in permsList)
+            {
+                if (reqLevelsDict.TryGetValue(perm, out int level))
+                {
+                    if (level <= curLevel)
+                    {
+                        newPerms |= perm;
+                    }
+                } else
+                {
+                    newPerms |= perm;
+                }
+            }
+            return newPerms;
+        }
+
+        public void UpdatePermissions() {
+            if (this.Role != null) CachedKeycardPermissions = CalculatePermissions(Role.Level);
         }
 
         /// <summary>
-        /// Generates an aux ETA for a <see cref="Scp079Role"/>.
+        /// Generates an aux ETA for an <see cref="Scp079Role"/>.
         /// </summary>
         /// <param name="role">The role to generate the ETA for </param>
         /// <param name="cost">The aux cost</param>
         /// <returns></returns>
-        public static float GetETA(Scp079Role role, float cost)
+        public static float GetDisplayETA(Scp079Role role, float cost)
         {
             if (cost <= role.Energy) return 0.5f;
             float regenSpeed = role.EnergyRegenerationSpeed;

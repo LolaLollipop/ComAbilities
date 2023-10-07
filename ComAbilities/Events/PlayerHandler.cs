@@ -4,7 +4,7 @@
     using ComAbilities.Abilities;
     using ComAbilities.Objects;
     using ComAbilities.Types;
-    using ComAbilities.UI;
+
     using Exiled.API.Enums;
     using Exiled.API.Extensions;
     using Exiled.API.Features;
@@ -12,12 +12,11 @@
     using Exiled.API.Features.Items;
     using Exiled.Events.EventArgs.Interfaces;
     using Exiled.Events.EventArgs.Player;
-    using Interactables.Interobjects.DoorUtils;
     using MEC;
     using PlayerRoles;
     using Scp914;
 
-    // using PluginAPI.Core;
+
     using System.Collections.Generic;
     using UnityEngine;
     using KeycardPermissions = Interactables.Interobjects.DoorUtils.KeycardPermissions;
@@ -25,23 +24,8 @@
 
     internal sealed class PlayerHandler : MonoBehaviour
     {
-        private readonly ComAbilities Instance = ComAbilities.Instance;
-        /* private Dictionary<HotkeyButton, Ability> _hotkeyDict = GetHotkeys();
-
-         private Dictionary<HotkeyButton, Ability> GetHotkeys()
-         {
-             Dictionary<HotkeyButton, Ability> _dict = new();
-             Assembly assembly = Assembly.GetExecutingAssembly();
-             foreach (Type type in assembly.GetTypes())
-             {
-                 if ( !(type.BaseType == typeof(Ability) && type.BaseType is IHotkeyAbility) ) continue;
-                 Attribute[] attrib = (Attribute[])type.GetCustomAttributes(typeof(HotkeyAttribute), true);
-                 if (attrib.Length > 0 && (type is IHotkeyAbility))
-                 {
-                     _dict.Add((type as IHotkeyAbility)!.hotkeyButton, type);
-                 }
-             }
-         } */
+        private static ComAbilities Instance => ComAbilities.Instance;
+        private static CompDict compDict => Instance.CompDict;
 
         public void OnChangingItem(ChangingItemEventArgs ev)
         {
@@ -50,7 +34,7 @@
             if (ev.Player.Role == RoleTypeId.Scp106 && ev.Player.SessionVariables.ContainsKey(Hologram.SessionVariable))
             {
                 if (ev.Item.Type != ItemType.Medkit) return;
-                CompManager compManager = Instance.CompDict.GetOrError(ev.Player);
+                CompManager compManager = compDict.GetOrError(ev.Player);
                 if (compManager.Hologram.ConfirmationPressed)
                 {
                     compManager.Hologram.ChangeBack();
@@ -130,7 +114,7 @@
             Player player = ev.Player;
             if (!player.SessionVariables.ContainsKey(Hologram.SessionVariable))
             {
-                if (Instance.CompDict.Contains(ev.Player)) Instance.CompDict.Remove(ev.Player);
+                if (Instance.CompDict.Contains(player)) Instance.CompDict.Remove(player);
             }
 
             if (ev.NewRole == RoleTypeId.Scp079)
@@ -144,10 +128,6 @@
 
         public void OnSpawning(SpawningEventArgs ev)
         {
-            SetElement one = new(-500, "Hi<line-height=20px>\n\nHello");
-            SetElement two = new(500, "Hi<line-height=20px>\nAgain hi");
-            SetElement three = new(-700, "NewLine");
-
             IEnumerable<Door> doors = Door.List.Where(x => x.Type == DoorType.Scp914Door);
             foreach (Door door in doors)
             {
@@ -163,44 +143,22 @@
             ev.Player.SendFakeSyncVar(Scp914Controller.Singleton.netIdentity, typeof(Scp914Controller), nameof(Scp914Controller.Network_knobSetting), Scp914KnobSetting.OneToOne);
             MirrorExtensions.SendFakeTargetRpc(ev.Player, Scp914Controller.Singleton.netIdentity, typeof(Scp914Controller), nameof(Scp914Controller.RpcPlaySound), 1);
 
+            Player player = ev.Player;
+            if (player == null || player.Role == null) return;
 
-            Timing.CallDelayed(5, () =>
+            if (player.Role == RoleTypeId.Scp106 && player.SessionVariables.ContainsKey(Hologram.SessionVariable))
             {
-                Log.Debug("Showing display");
-                try
-                {
-                    PlayerDisplay display = new(ev.Player);
-                    display.Add(one, two, three);
-                    display.Update();
-                } catch(Exception e)
-                {
-                    Log.Debug(e);
-                }
-            });
-
-            Timing.CallDelayed(15, () =>
-            {
-                PlayerDisplay display = new(ev.Player);
-                display.Add(one, two);
-                display.Update();
-            });
-
-            if (ev.Player == null || ev.Player.Role == null) return;
-
-            if (ev.Player.Role == RoleTypeId.Scp106 && ev.Player.SessionVariables.ContainsKey(Hologram.SessionVariable))
-            {
-                ev.Player.AddItem(ItemType.Painkillers);
+                player.AddItem(ItemType.Painkillers);
             }
 
-            if (ev.Player.Role == RoleTypeId.Scp079)
+            if (player.Role == RoleTypeId.Scp079)
             {
                 Timing.CallDelayed(15, () =>
                 {
-
                     Firearm gun = (Firearm)Item.Create(ItemType.GunCOM15);
                     gun.AddAttachment(InventorySystem.Items.Firearms.Attachments.AttachmentName.Flashlight);
-                    ev.Player.AddItem(gun);
-                    ev.Player.CurrentItem = gun;
+                    player.AddItem(gun);
+                    player.CurrentItem = gun;
                 });
             }
         }
@@ -209,39 +167,21 @@
         {
             if (ev.Player == null || ev.Player.Role == null) return;
 
-            if (!Instance.Config.DoComputerPerms)
-            {
-                return;
-            }
+            if (!Instance.Config.DoComputerPerms) return;
+
             Player player = ev.Player;
-            if (player.Role == PlayerRoles.RoleTypeId.Scp079)
+            if (player.Role is Scp079Role role)
             {
-                KeycardPermissions computerPermissions = new KeycardPermissions();
-                KeycardPermissions doorPerms = ev.Door.RequiredPermissions.RequiredPermissions;
-
-                Scp079Role role = player.Role.As<Scp079Role>();
-                int accessLevel = role.Level;
-                foreach (KeyValuePair<KeycardPermissions, int> pair in Instance.Config.DoorPermissions)
+                if (Helper.CanOpenDoor(player, ev.Door))
                 {
-                    if (accessLevel >= pair.Value)
-                    {
-                        computerPermissions |= pair.Key;
-                    }
-                }
-                if (!computerPermissions.HasFlag(doorPerms))
-                {
-                    ev.IsAllowed = false;
-                    ev.Door.PlaySound(DoorBeepType.PermissionDenied);
 
-                    CompManager compManager = Instance.CompDict.GetOrError(ev.Player);
-                    compManager.TryShowErrorHint("- DOOR ACCESS DENIED -");
                 }
             }
         }
         public void OnReloadingWeapon(ReloadingWeaponEventArgs ev) => ReceiveInput(ev, AllHotkeys.Reload);
         public void OnUnloadingWeapon(UnloadingWeaponEventArgs ev) => ReceiveInput(ev, AllHotkeys.HoldReload);
         public void OnTogglingWeaponFlashlight(TogglingWeaponFlashlightEventArgs ev) => ReceiveInput(ev, AllHotkeys.GunFlashlight);
-        public void OnDroppingItem(DroppingItemEventArgs ev) { if (ev.IsThrown) ReceiveInput(ev, AllHotkeys.GunFlashlight); }
+        public void OnDroppingItem(DroppingItemEventArgs ev) { if (ev.IsThrown) ReceiveInput(ev, AllHotkeys.Throw); }
 
 
         internal void DenyHologram<T>(T ev)
@@ -257,7 +197,9 @@
         internal void ReceiveInput<T>(T ev, AllHotkeys hotkey)
         where T: IDeniableEvent, IPlayerEvent
         {
+            if (ev.Player == null) return;
             if (ev.Player.Role != RoleTypeId.Scp079) return;
+
             CompManager compManager = Instance.CompDict.GetOrError(ev.Player);
             compManager.HandleInput(hotkey);
             ev.IsAllowed = false; 

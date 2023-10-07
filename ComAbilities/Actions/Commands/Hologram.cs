@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ComAbilities;
+﻿using System.Text;
 
 namespace ComAbilities.Commands
 {
@@ -11,13 +6,9 @@ namespace ComAbilities.Commands
 
     using CommandSystem;
     using Exiled.API.Features;
-    using Exiled.API.Features.Pickups;
     using Exiled.API.Features.Roles;
     using global::ComAbilities.Abilities;
     using global::ComAbilities.Objects;
-    using PlayerRoles;
-    using Respawning;
-    using UnityEngine;
 
     [CommandHandler(typeof(ClientCommandHandler))]
     public sealed class HologramCommand : ICommand
@@ -26,17 +17,15 @@ namespace ComAbilities.Commands
         public string[] Aliases { get; } = new[] { "holo" , "hg"};
         public string Description { get; } = string.Format(Instance.Localization.Shared.CommandFormat, Instance.Localization.Hologram.Description);
 
-        private readonly static ComAbilities Instance = ComAbilities.Instance;
+        private static ComAbilities Instance => ComAbilities.Instance;
+        private static Localizations.HologramT HologramT => Instance.Localization.Hologram;
+        private static Localizations.SharedT SharedT => Instance.Localization.Shared;
 
-        private readonly static Localizations.ErrorsT ErrorsT = Instance.Localization.Errors;
-        private readonly static Localizations.HologramT HologramT = Instance.Localization.Hologram;
-        private readonly static Localizations.SharedT SharedT = Instance.Localization.Shared;
         public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
         {
             Player player = Player.Get(sender);
             HologramConfig holoConfig = Instance.Config.Hologram;
 
-           
             if (Guards.NotEnabled(holoConfig, out response)) return false;
             if (Guards.NotComputer(player.Role, out response)) return false;
 

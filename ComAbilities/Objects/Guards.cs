@@ -1,14 +1,7 @@
 ﻿using ComAbilities.Localizations;
 using ComAbilities.Types;
-using CommandSystem.Commands.RemoteAdmin.Broadcasts;
-using Exiled.API.Features;
 using Exiled.API.Features.Roles;
 using PlayerRoles;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ComAbilities.Objects
 {
@@ -50,23 +43,14 @@ namespace ComAbilities.Objects
             return false;
         }
 
-        public static bool SignalLost(Scp079Role role)
-        {
-            if (role.IsLost)
-            {
-                return true;
-            } else
-            {
-                return false;
-            }
-        }
+        public static bool SignalLost(Scp079Role role) => role.IsLost;
 
         public static bool NotEnoughAux(Scp079Role role, float cost, out string response)
         {
             response = "";
             if (role.Energy < cost)
             {
-                response = string.Format(Errors.NotEnoughAux, CompManager.GetETA(role, cost));
+                response = string.Format(Errors.NotEnoughAux, CompManager.GetDisplayETA(role, cost));
                 return true;
             }
             return false;

@@ -1,22 +1,59 @@
 ﻿namespace Localizer
 {
     using System;
+    using System.Security.Policy;
     using System.Text;
     using Exiled.API.Features;
     using Exiled.API.Interfaces;
+    using UnityEngine;
     using Utf8Json;
+    using UnityEngine.Networking;
+    using System.Collections;
+    using MEC;
 
-    public class Updater
+    public class Updater : MonoBehaviour
     {
-        public Version CurrentVersion;
-        public string DllName;
-        public string Url;
+        private const string Url = "https://api.github.com/repos/Ruemena/ComAbilities/releases/latest";
+
+        private Version CurrentVersion;
+        private string DllName;
+
+        public int State { get; private set; } = 0;
+        public bool IsSafeToStop => State != 1;
         public HttpClient Client { get; set; }
+
+
+
         public Updater(Version currentVersion, string url, string dllName, HttpClient client) {
             CurrentVersion = currentVersion;
             DllName = dllName;
-            Url = url;
             Client = client;
+        }
+
+
+        private IEnumerator<float> SearchForUpdates()
+        {
+            using (UnityWebRequest request = UnityWebRequest.Get(Url))
+            {
+                request.SetRequestHeader("Content-Type", "application/json");
+                yield return Timing.WaitUntilDone(request.SendWebRequest());
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    string content = request.downloadHandler.text;
+
+                    ExpectedResponse? expectedResponse = JsonSerializer.Deserialize<ExpectedResponse>(content);
+
+                    if (expectedResponse?.assets != null)
+                    {
+
+                    }
+                } else
+                {
+                    Log.Warn("[UPDATER] Unable to check for updates.");
+                }
+
+            }
         }
 
         public async void Start(IPlugin<IConfig> plugin)

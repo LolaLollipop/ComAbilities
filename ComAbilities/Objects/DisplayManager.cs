@@ -4,6 +4,8 @@ using ComAbilities.Types;
 using ComAbilities.Types.RueTasks;
 using CommandSystem;
 using Exiled.API.Features;
+using Exiled.API.Features.Roles;
+using RueI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,180 +20,127 @@ using Utf8Json.Resolvers.Internal;
 /// Handles 
 namespace ComAbilities.Objects
 {
-    /// <summary>
-    /// Used to display multiple things at a time
-    /// </summary>
-    public class Element
+    [Flags]
+    public enum Screens
     {
-        private string? _content;
-        public int AllocatedLines { get; private set; }
-        public Element(int lines)
-        {
-            AllocatedLines = lines;
-        }
-        public Element Set(string content)
-        {
-            _content = content;
-            return this; // method chaining
-        }
-        public Element AllocateLines(int lines)
-        {
-            AllocatedLines = lines;
-            return this; // method chaining
-        }
-        public string Get()
-        {
-            return _content ?? " ";
-        }
+        Main = 1,
+        Tracker = 2,
     }
-    internal class ElementOrString<TElementName>
-    {
-        public string? String { get; set; }
-        public TElementName? ElementName { get; set; }
-        public int? AllocatedLines { get; set; }
-        public ElementOrString(string content)
-        {
-            String = content;
-        }
-        public ElementOrString(TElementName name, int allocatedLines)
-        {
-            ElementName = name;
-            AllocatedLines = allocatedLines;
-        }
-    }
-    public class Screen<TElementName>
-    {
-        public Screen() { }
-       // private Dictionary<TElementName, Element> _dynamicElements = new();
-        private List<ElementOrString<TElementName>> _display = new();
-        private static string _placeholder => " ";
 
-        public Screen<TElementName> AddString(string add)
+    public class DisplayManager
+    {
+        private CompManager compManager;
+
+        private static ComAbilities Instance => ComAbilities.Instance;
+        private static CALocalization Localization => Instance.Localization;
+
+        public ScreenPlayerDisplay<Screens> PlayerDisplay { get; }
+
+        public ScreenSetElement<Screens> TrackerElement { get; }
+        public ScreenSetElement<Screens> ActiveAbilitiesElement { get; }
+        public ScreenSetElement<Screens> AvailableAbilitiesElement { get; }
+        public SetElement MessageElement { get; } = new(-100, zIndex: 20);
+
+        public DisplayManager(CompManager manager)
         {
-            ElementOrString<TElementName> element = new ElementOrString<TElementName>(add);
-            _display.Add(element);
-            return this; // method chaining
+            compManager = manager;
+            PlayerDisplay = new(manager.AscPlayer, Screens.Main);
+
+            TrackerElement = new(Screens.Tracker, 0, zIndex: 10, Get_TrackerMenu());
+            ActiveAbilitiesElement = new(Screens.Main, -500, zIndex: 5, Get_ActiveAbilities());
+            AvailableAbilitiesElement = new(Screens.Main, -500, zIndex: 4, Get_AvailableAbilities());
+
+            PlayerDisplay.Add(MessageElement, TrackerElement, ActiveAbilitiesElement, AvailableAbilitiesElement);
         }
-        public Screen<TElementName> AddElement(TElementName elementName, int allocatedLines = 0)
+
+        public Screens CurrentScreen { get => PlayerDisplay.CurrentScreen; set => PlayerDisplay.CurrentScreen = value; }
+
+        public void Update() => PlayerDisplay.Update();
+        public void Update(Screens screen) => PlayerDisplay.Update(screen);
+        /// TODO: format this to use proper text thing
+        /*
+                     this.DisplayManager.AddScreen(DisplayTypes.Main)
+                .AddString("<align=center><voffset=-3em><b><color=#801919><size=50%>")
+                .AddElement(Elements.Message, 1)
+                .AddString("</size></color></b></voffset></align>")
+                .AddString("<align=right><size=50%><line-height=120%><voffset=-5em><color=#adadad>")
+                .AddElement(Elements.AvailableAbilities, 12)
+                .AddString("</color></voffset></size></align></line-height>");
+
+            this.DisplayManager.AddScreen(DisplayTypes.Tracker)
+                .AddString("\n<align=center><voffset=-5em><b><color=#801919><size=50%>")
+                .AddElement(Elements.Message, 1)
+                .AddString("</size></color></b></voffset></align>")
+                .AddString("<size=50%><align=center><line-height=50%><voffset=-7em>PLAYER TRACKER<br>SELECT A SLOT TO BEGIN TRACKING")
+                .AddElement(Elements.Trackers, 6)
+                .AddString("</color></voffset></size></align></line-height>");*/
+        public string Get_ActiveAbilities()
         {
-            ElementOrString<TElementName> element = new(elementName, allocatedLines);
-            element.AllocatedLines = allocatedLines;
-            _display.Add(element);
-            return this; // method chaining
-        }
-        public string ConvertToString(Dictionary<TElementName, Element> elements)
-        {
+            if (!compManager.ActiveAbilities.Any() || compManager.Role == null) return string.Empty;
+
+            float regenSpeed = compManager.Role.AuxManager.RegenSpeed;
             StringBuilder sb = new();
-            foreach (var elementOrString in _display)
+
+            sb.Append("<color=#ad251c>");
+
+            if (regenSpeed == 0)
             {
-                if (elementOrString.String != null)
-                {
-                    sb.Append(elementOrString.String);
-                } else if (elementOrString.ElementName != null)
-                {
-                    Element currentElement = elements[elementOrString.ElementName];
-                    sb.Append(currentElement.Get());
+                sb.Append(Instance.Localization.Shared.NoAuxRegen);
+            }
+            else
+            {
+                float percent = (float)Math.Round(regenSpeed / compManager.Role.AuxManager._regenerationPerTier[compManager.Role.Level] * 100, 3);
+                sb.AppendFormat(Instance.Localization.Shared.RegenSpeedFormat, percent);
+            }
 
-                    int newLines = (elementOrString.AllocatedLines ?? 0) - Regex.Matches(currentElement.Get(), @"(\n)|<br>").Count;
-                    for (int i = 0; i < Math.Min(newLines, 0); i++)
-                    {
-                        sb.Append("\n ");
-                    }
+            return sb.ToString();
 
-                } else throw new Exception("Invalid ElementOrString provided - this is a developer error");
+            //DisplayManager.SetElement(Elements.ActiveAbilities, sb.ToString());
+            //DisplayManager.Update(DisplayTypes.Main);
+        }
+
+        public string Get_AvailableAbilities()
+        {
+            if (compManager.Role == null) return string.Empty;
+
+            StringBuilder sb = new("<align=right><size=50%><line-height=120%><color=#adadad>");
+            sb.Append(Instance.Localization.Shared.AvailableAbilities);
+            sb.Append("<br>");
+
+            foreach (Ability ability in compManager.AbilityInstances)
+            {
+                if (compManager.Role.Level >= ability.ReqLevel)
+                {
+                    sb.AppendLine(ability.DisplayText);
+                }
             }
             return sb.ToString();
         }
-    }
-    public class DisplayManager<TScreenName, TElementName>
-    {
-        public TScreenName? SelectedScreen { get; private set; }
 
-        private Dictionary<TScreenName, Screen<TElementName>> _screens = new();
-        private Dictionary<TElementName, Element> _elements = new();
-        private Player _player;
-        private string cache = string.Empty;
-
-
-        private const float HintRateLimit = 0.6f;
-        private const float SwitchCooldownLength = 0.3f;
-
-        private bool _shouldUpdate { get; set; } = false;
-        private UpdateTask _rateLimitTask => new(HintRateLimit, OnRateLimitFinished);
-
-        private TScreenName? toSwitchScreen;
-        private UpdateTask DelayedSwitch => new(SwitchCooldownLength, () => SetScreen(toSwitchScreen!));
-        private Cooldown SwitchCooldown = new();
-
-
-        public DisplayManager(Player player) {
-            _player = player;
-        }
-        public DisplayManager<TScreenName, TElementName> CreateElement(TElementName name, out Element? element, int lines = 0)
+        public string Get_TrackerMenu()
         {
-            element = null;
-            _elements[name] = new(lines);
-            return this;
-        }
-        public Element SetElement(TElementName name, string content)
-        {
-            _elements[name].Set(content);
-            return _elements[name];
-        }
-        public Screen<TElementName> AddScreen(TScreenName screenName)
-        {
-            Screen<TElementName> screen = new();
-            _screens.Add(screenName, screen);
+            TrackerManager trackers = compManager.PlayerTracker.Trackers;
+            
+            StringBuilder sb = new();
+            sb.Append(trackers.ConvertToHintString());
 
-            return screen;
-        }
-        public void SetScreen(TScreenName screenName)
-        {
-            if (!_screens.ContainsKey(screenName)) throw new Exception("Invalid screen provided");
-            if (SwitchCooldown.Active)
-            {
-                toSwitchScreen = screenName;
-                DelayedSwitch.Run(SwitchCooldownLength - SwitchCooldown.RunningFor());
-                return;
-            }
-            SelectedScreen = screenName;
-            SwitchCooldown.Start(SwitchCooldownLength);
-        }
-        public void Update(TScreenName screenName)
-        {
-            if (SelectedScreen != null) { 
-                if (screenName != null && screenName.Equals(SelectedScreen))
-                {
-                    Update();
-                }
-            }
-        }
-        public void Update()
-        {
-            if (_rateLimitTask.IsRunning)
-            {
-                _shouldUpdate = true;
-                return;
-            }
+            TrackerState currentSelected = trackers.GetState(trackers.SelectedTracker);
 
-            ShowNewHints();
-        }
-        private void ShowNewHints()
-        {
-            if (SelectedScreen == null || !_screens.ContainsKey(SelectedScreen)) throw new Exception("Invalid selected screen");
-            _rateLimitTask.Run();
+            if (currentSelected == TrackerState.Selected)
+                sb.Append("\n" + Localization.Tracker.SelectedEmpty);
 
-            Screen<TElementName> currentScreen = _screens[SelectedScreen];
-            string content = currentScreen.ConvertToString(_elements);
-            Hint hint = new(content, 9999999, true);
-            _player.ShowHint(hint);
+            if (currentSelected == TrackerState.SelectedFull)
+                sb.Append("\n" + Localization.Tracker.SelectedFull);
+
+            sb.Append("\n" + Localization.Tracker.CloseMessage);
+
+            return sb.ToString();
         }
-        private void OnRateLimitFinished()
+
+        // TODO: do this lol
+        public string AddMessage(string message)
         {
-            if (_shouldUpdate)
-            {
-                ShowNewHints();
-            }
+            return string.Empty;
         }
     }
 }

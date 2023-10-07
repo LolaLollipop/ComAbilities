@@ -37,7 +37,7 @@ namespace ComAbilities.Patches
 
             Collection<CodeInstruction> collection = new()
             {
-                new CodeInstruction(OpCodes.Ldarg_0).MoveLabelsFrom(newInstructions[index]),
+                new CodeInstruction(OpCodes.Ldarg_0),
                 new(OpCodes.Callvirt, PropertyGetter(typeof(ScpSubroutineBase), nameof(ScpSubroutineBase.Role))),
                 new(OpCodes.Ldarg_0),
                 new(OpCodes.Ldfld, Field(typeof(Scp079BlackoutRoomAbility), nameof(Scp079BlackoutRoomAbility._roomController))),
@@ -46,7 +46,7 @@ namespace ComAbilities.Patches
                 new(OpCodes.Ldarg_0),
                 new(OpCodes.Ldfld, Field(typeof(Scp079BlackoutRoomAbility), nameof(Scp079BlackoutRoomAbility._cooldown))),
   
-               new(OpCodes.Call, Method(typeof(BlackoutRoomCooldown), nameof(BlackoutRoomCooldown.ShowErrorHint), new [] { typeof(PlayerRoleBase), typeof(RoomLightController), typeof(Dictionary<uint, double>), typeof(float) }))
+                new(OpCodes.Call, Method(typeof(BlackoutRoomCooldown), nameof(ShowErrorHint), new [] { typeof(PlayerRoleBase), typeof(RoomLightController), typeof(Dictionary<uint, double>), typeof(float) }))
                // CodeInstruction.Call(typeof(BlackoutRoomCooldown), nameof(ShowErrorHint))
             };
             newInstructions.InsertRange(index, collection);     

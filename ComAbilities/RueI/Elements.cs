@@ -1,4 +1,4 @@
-﻿namespace ComAbilities.UI
+﻿namespace RueI
 {
     using System.Text.RegularExpressions;
 
@@ -8,6 +8,64 @@
     /// <param name="Content">The hint's content.</param>
     /// <param name="Offset">The offset that should be applied.</param>
     public record struct ParsedData(string Content, float Offset);
+
+    /// <summary>
+    /// Represents an element that is shown when certain screens are active.
+    /// </summary>
+    /// <typeparam name="T">The enum to be used as the screen identifier</typeparam>
+    public interface IScreenElement<T>
+        where T: Enum
+    {
+        /// <summary>
+        /// Gets or sets the screens that this element is shown on.
+        /// </summary>
+        public T Screens { get; set; }
+    }
+
+    /// <summary>
+    /// Represents a <see cref="DynamicElement"/> that is tied to a number of screens.
+    /// </summary>
+    /// <typeparam name="T">The enum to be used as the screen identifier.</typeparam>
+    public class ScreenSetElement<T> : SetElement, IScreenElement<T>
+        where T : Enum
+    {
+        /// <inheritdoc/>
+        public T Screens { get; set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ScreenSetElement{T}"/> class.
+        /// </summary>
+        /// <param name="screens">The screens that this element is visible on.</param>
+        /// <param name="position">The position of the element, where 0 is the hint baseline (roughly middle-bottom of the screen).</param>
+        /// <param name="zIndex">A value determing the priority of the hint, where higher numbers means that it will render above hints with a lower number.</param>
+        /// <param name="content">The content to set the element to.</param>
+        public ScreenSetElement(T screens, float position, int zIndex = 0, string content = "") : base(position, zIndex, content)
+        {
+            Screens = screens;
+        }
+    }
+
+    /// <summary>
+    /// Represents a <see cref="DynamicElement"/> that it is tied to a number of screens.
+    /// </summary>
+    /// <typeparam name="T">The enum to be used as the screen identifier.</typeparam>
+    public class ScreenDynamicElement<T> : DynamicElement, IScreenElement<T>
+        where T: Enum
+    {
+        /// <inheritdoc/>
+        public T Screens { get; set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ScreenDynamicElement{T}"/> class.
+        /// </summary>
+        /// <param name="contentGetter">A delegate returning the new content that will be ran every time the display is updated.</param>
+        /// <param name="screens">The screens that this element is visible on.</param>
+        /// <param name="position">The position of the element, where 0 is the hint baseline (roughly middle-bottom of the screen).</param>
+        /// <param name="zIndex">A value determing the priority of the hint, where higher numbers means that it will render above hints with a lower number.</param>
+        public ScreenDynamicElement(GetContent contentGetter, T screens, float position, int zIndex = 0) : base(contentGetter, position, zIndex) {
+            Screens = screens;
+        }
+    }
 
     /// <summary>
     /// Represents a non-cached element that evaluates and parses a function when getting its content.
@@ -23,21 +81,21 @@
         /// <summary>
         /// Initializes a new instance of the <see cref="DynamicElement"/> class.
         /// </summary>
-        /// <param name="contentGetter">A dekegate invoked every time the display is updated.</param>
-        public DynamicElement(GetContent contentGetter)
+        /// <param name="contentGetter">A delegate returning the new content that will be ran every time the display is updated.</param>
+        /// <param name="position">The position of the element, where 0 is the hint baseline (roughly middle-bottom of the screen).</param>
+        /// <param name="zIndex">A value determing the priority of the hint, where higher numbers means that it will render above hints with a lower number.</param>
+        public DynamicElement(GetContent contentGetter, float position, int zIndex = 0) : base(position, zIndex)
         {
             ContentGetter = contentGetter;
         }
 
         /// <summary>
-        /// Gets or sets a method that returns the new content and is called every time the display is updated
+        /// Gets or sets a method that returns the new content and is called every time the display is updated.
         /// </summary>
         public GetContent ContentGetter { get; set; }
 
-        public override ParsedData ParsedData
-        {
-            get => Parse(ContentGetter());
-        }
+        /// <inheritdoc/>
+        public override ParsedData ParsedData => Parse(ContentGetter());
     }
 
     /// <summary>
@@ -48,9 +106,10 @@
         /// <summary>
         /// Initializes a new instance of the <see cref="SetElement"/> class.
         /// </summary>
-        /// <param name="position">The position of the element, where 0 is the hint baseline (roughly middle-bottom of the screen)</param>
-        /// <param name="content">The content of the element</param>
-        public SetElement(float position, string content = "")
+        /// <param name="position"></param>
+        /// <param name="zIndex">A value determing the priority of the hint, where higher numbers means that it will render above hints with a lower number.</param>
+        /// <param name="content">The content to set the element to.</param>
+        public SetElement(float position, int zIndex = 0, string content = "") : base(position, zIndex)
         {
             Position = position;
             Content = content;
@@ -61,11 +120,6 @@
         /// Gets the raw content of the element.
         /// </summary>
         public virtual string Content { get; protected set; }
-
-        /// <summary>
-        /// Gets the offset of the element.
-        /// </summary>
-        public float Offset { get; private set; } = 0;
 
         /// <summary>
         /// Sets the content of this element.
@@ -83,7 +137,13 @@
     /// </summary>
     public abstract class Element : IComparable<Element>
     {
-        protected static readonly Regex ParserRegex = new(@"<(?:line-height=(-?[0-9]\d*(?:\.\d+?)?)px>|/line-height>|noparse>|/noparse>|br>)|\n");
+        // match line heights, line height closers, noparse tags, noparse closing tags, br, and newlines
+        protected static readonly Regex ParserRegex = new(@"<(?:line-height=(-?[0-9]\d*(?:\.\d+?)?)(px|em|ems|%)>|/line-height>|noparse>|/noparse>|br>)|\n");
+
+        public Element(float position, int zIndex) {
+            Position = position;
+            ZIndex = zIndex;
+        }
 
         /// <summary>
         /// Gets or sets a value indicating whether or not this element is enabled and will show.
@@ -103,7 +163,7 @@
         /// <summary>
         /// Gets or sets the priority of the hint (determining if it shows above another hint).
         /// </summary>
-        public virtual int ZIndex { get; set; } = 1;
+        public virtual int ZIndex { get; set; } = 0;
 
         /// <summary>
         /// Calculates the offset for two hints.
@@ -118,6 +178,11 @@
             return calc / -2;
         }
 
+        /// <summary>
+        /// Compares an element to another element
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns>An <see cref="int"/> indicating whether not this element has a larger <see cref="ZIndex"/></returns>
         public int CompareTo(Element other) => this.ZIndex - other.ZIndex;
 
         /// <summary>
@@ -128,10 +193,10 @@
         protected static ParsedData Parse(string content)
         {
             bool shouldParse = true;
-            float currentHeight = PlayerDisplay.DefaultHeight; // in pixels
+            float currentHeight = PlayerDisplay.DEFAULT_HEIGHT; // in pixels
             float newOffset = 0;
 
-            content = $"<line-height={PlayerDisplay.DefaultHeight}px>" + content;
+            content = $"<line-height={PlayerDisplay.DEFAULT_HEIGHT}px>" + content;
             string newString = ParserRegex.Replace(content, (match) =>
             {
                 string small = match.Value.Substring(0, Math.Min(5, match.Value.Length));
@@ -139,10 +204,25 @@
                 switch (small)
                 {
                     case "<line" when shouldParse:
-                        currentHeight = float.Parse(match.Groups[1].ToString());
-                        break;
+
+                        if (!float.TryParse(match.Groups[1].ToString(), out float value))
+                        {
+                            currentHeight = PlayerDisplay.DEFAULT_HEIGHT;
+                            return $"<line-height={currentHeight}px>";
+                        }
+
+                        switch (match.Groups[2].ToString())
+                        {
+                            case "%":
+                                currentHeight = (value / 100) * PlayerDisplay.DEFAULT_HEIGHT;
+                                break;
+                            case "em" or "ems":
+                                currentHeight = value * PlayerDisplay.EMS_TO_PIXELS;
+                                break;
+                        }
+                        return $"<line-height={currentHeight}px>";
                     case "</lin" when shouldParse:
-                        currentHeight = PlayerDisplay.DefaultHeight;
+                        currentHeight = PlayerDisplay.DEFAULT_HEIGHT;
                         return $"<line-height={currentHeight}px>";
                     case "</nop":
                         shouldParse = true;

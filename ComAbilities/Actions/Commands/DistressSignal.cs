@@ -27,11 +27,8 @@ namespace ComAbilities.Commands
         public string[] Aliases { get; } = new[] { "ds" , "distress"};
         public string Description { get; } = string.Format(Instance.Localization.Shared.CommandFormat, DistressSignalT.Description);
 
-        private readonly static ComAbilities Instance = ComAbilities.Instance;
-
-        private readonly static ErrorsT ErrorsT = Instance.Localization.Errors;
-        private readonly static DistressSignalT DistressSignalT = Instance.Localization.DistressSignal;
-        private readonly static SharedT SharedT = Instance.Localization.Shared;
+        private static ComAbilities Instance => ComAbilities.Instance;
+        private static DistressSignalT DistressSignalT => Instance.Localization.DistressSignal;
 
         public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
         {

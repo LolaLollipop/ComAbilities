@@ -14,11 +14,20 @@ namespace ComAbilities.Abilities
 {
     public sealed class Hologram : Ability, IReductionAbility, ICooldownAbility
     {
-        private readonly static ComAbilities Instance = ComAbilities.Instance;
         private static HologramT HologramT => Instance.Localization.Hologram;
         private static HologramConfig _config => Instance.Config.Hologram;
 
-        public Hologram(CompManager compManager) : base(compManager) { }
+        private readonly Cooldown _cooldown = new();
+        private readonly Cooldown _expireConfirmation = new();
+        private PeriodicTask _hologramTask;
+
+        private const ushort _broadcastTime = 3;
+        private const int _timeUntilExpire = 5;
+
+        public Hologram(CompManager compManager) : base(compManager) {
+            _hologramTask = new(_config.Length, 1f, UpdateText, ChangeBack);
+        }
+
         public override string Name { get; } = HologramT.Name;
         public override string Description { get; } = HologramT.Description;
         public override float AuxCost { get; } = 0f;
@@ -26,6 +35,8 @@ namespace ComAbilities.Abilities
         public override string DisplayText => string.Format(HologramT.DisplayText, GetLowestAux(), GetHighestAux());
         public override bool Enabled => _config.Enabled;
         public string ActiveDisplayText { get; } = "";
+
+        public float CooldownLength => _config.Cooldown;
 
         public float AuxModifier { get; } = 0f;
 
@@ -35,15 +46,6 @@ namespace ComAbilities.Abilities
         public bool ConfirmationPressed => _expireConfirmation.Active;
 
         public const string SessionVariable = "ComAbilities_hologram";
-
-        private Cooldown _cooldown { get; } = new();
-        public float CooldownLength => _config.Cooldown;
-        private Cooldown _expireConfirmation { get; } = new();
-
-        private PeriodicTask _hologramTask => new(_config.Length, 1f, UpdateText, ChangeBack);
-
-        private const ushort _broadcastTime = 3;
-        private const int _timeUntilExpire = 5;
 
         public void Trigger(HologramRoleConfig roleConfig)
         {

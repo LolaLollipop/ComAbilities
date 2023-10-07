@@ -17,23 +17,17 @@ using System.Threading.Tasks;
 
 namespace ComAbilities.Abilities
 {
-    //[Hotkey]
-    public struct GoToArgs
-    {
-        public Player Player;
-        public GoToType GoToType;
-    }
     public sealed class GoTo : Ability, ICooldownAbility
     {
-        private readonly static ComAbilities Instance = ComAbilities.Instance;
-
         private static GoToT GoToT => Instance.Localization.GoTo;
         private static GoToScpConfig _config => Instance.Config.GoToScp;
-        public GoTo(CompManager compManager) : base(compManager) { }
+        public GoTo(CompManager compManager) : base(compManager) { 
+        
+        }
 
-        public override string Name => GoToT.Name;
-        public override string Description => GoToT.Description;
-        public override float AuxCost => _config.AuxCost;
+        public override string Name { get; } = GoToT.Name;
+        public override string Description { get; } = GoToT.Description;
+        public override float AuxCost { get; } = _config.AuxCost;
         public override int ReqLevel => _config.Level;
         public override string DisplayText => string.Format(GoToT.DisplayText, AuxCost, Instance.Config.PlayerTracker.GoToCost);
 
@@ -42,7 +36,7 @@ namespace ComAbilities.Abilities
 
         public float CooldownLength => _config.Cooldown;
 
-        private Cooldown _cooldown { get; } = new();
+        private Cooldown _cooldown = new();
 
 
         public void Trigger(Player player, GoToType goToType)

@@ -1,9 +1,92 @@
-﻿namespace ComAbilities.UI
+﻿namespace RueI
 {
     using System.Text;
 
     using Exiled.API.Features;
     using MEC;
+
+    /// <summary>
+    /// Represents a <see cref="PlayerDisplay"/> that hides elements based on an active screen.
+    /// </summary>
+    /// <typeparam name="T">The enum to be used as the screen identifier.</typeparam>
+    public class ScreenPlayerDisplay<T> : PlayerDisplay
+        where T : Enum
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ScreenPlayerDisplay{T}"/> class.
+        /// </summary>
+        /// <param name="player">The <see cref="Player"/> to assign the display to.</param>
+        /// <param name="defaultScreen">The default <see cref="{T}"/> to use as a screen.</param>
+        public ScreenPlayerDisplay(Player player, T defaultScreen) : base(player)
+        {
+            CurrentScreen  = defaultScreen;
+        }
+
+        /// <summary>
+        /// Gets or sets the current screen that the display is on.
+        /// </summary>
+        /// <remarks>Updating this does not automatically update the display.</remarks>
+        public T CurrentScreen { get; set; }
+
+        /// <summary>
+        /// Updates the display if the current screen is a certain screen.
+        /// </summary>
+        /// <param name="screen">The screen.</param>
+        public void Update(T screen)
+        {
+            if (CurrentScreen.Equals(screen)) Update();
+        }
+
+        internal override string ParseElements()
+        {
+            if (!elements.Any())
+            {
+                return string.Empty;
+            }
+
+            StringBuilder sb = new();
+            float totalOffset = 0;
+
+            float lastPosition = 0;
+            float lastOffset = 0;
+
+            elements.Sort(Comparer);
+
+            for (int i = 0; i < elements.Count; i++)
+            {
+                Element curElement = elements[i];
+                if (!curElement.Enabled) continue;
+
+                if (curElement is IScreenElement<T> asScreen)
+                {
+                    if (!asScreen.Screens.HasFlag(CurrentScreen)) continue;
+                }
+                ParsedData parsedData = curElement.ParsedData;
+
+                if (i != 0)
+                {
+                    float calcedOffset = Element.CalculateOffset(lastPosition, lastOffset, curElement.Position);
+                    Log.Debug(calcedOffset);
+                    sb.Append($"<line-height={calcedOffset}px>\n</line-height>");
+                    totalOffset += calcedOffset;
+                }
+                else
+                {
+                    totalOffset += curElement.Position;
+                }
+
+                sb.Append(parsedData.Content);
+                sb.Append(TAG_CLOSER);
+
+                totalOffset += parsedData.Offset;
+                lastPosition = curElement.Position;
+                lastOffset = parsedData.Offset;
+            }
+
+            sb.Insert(0, $"<line-height={totalOffset}px>\n");
+            return sb.ToString();
+        }
+    }
 
     /// <summary>
     /// Represents a display for a player.
@@ -13,22 +96,31 @@
         /// <summary>
         /// Gets the default height if a line-height is not provided.
         /// </summary>
-        public const float DefaultHeight = 35; // in pixels;
+        public const float DEFAULT_HEIGHT = 41; // in pixels;
+
+        /// <summary>
+        /// Gets an approximation of how many pixels are an in an em. 
+        /// </summary>
+        public const float EMS_TO_PIXELS = 35;
 
         /// <summary>
         /// Gets a string used to close all tags.
         /// </summary>
-        private const string Closer = "</noparse></align></color></b></i></cspace></line-height></line-indent></link></lowercase></uppercase></smallcaps></margin></mark></mspace></pos></size></s></u></voffset></width>";
-        private const float HintRateLimit = 0.55f;
+        public const string TAG_CLOSER = "</noparse></align></color></b></i></cspace></line-height></line-indent></link></lowercase></uppercase></smallcaps></margin></mark></mspace></pos></size></s></u></voffset></width>";
 
-        private CoroutineHandle? rateLimitTask;
-        private bool rateLimitActive = false;
-        private bool shouldUpdate = false;
+        /// <summary>
+        /// Gets the ratelimit used for displaying hints.
+        /// </summary>
+        public const float HINT_RATE_LIMIT = 0.55f;
+
+        protected CoroutineHandle? rateLimitTask;
+        protected bool rateLimitActive = false;
+        protected bool shouldUpdate = false;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PlayerDisplay"/> class.
         /// </summary>
-        /// <param name="player">The <see cref="Exiled.API.Features.Player"/>to assign the display to.</param>
+        /// <param name="player">The <see cref="Exiled.API.Features.Player"/> to assign the display to.</param>
         public PlayerDisplay(Player player)
         {
             Player = player;
@@ -45,11 +137,14 @@
             }
         }
 
-        private static Comparison<Element> Comparer { get; } = (Element first, Element other) => other.ZIndex - first.ZIndex;
+        protected static Comparison<Element> Comparer { get; } = (Element first, Element other) => other.ZIndex - first.ZIndex;
 
-        private List<Element> elements { get; } = new();
+        protected List<Element> elements { get; } = new();
 
-        private Player Player { get; set; }
+        /// <summary>
+        /// Gets the player that this display is assigned to.
+        /// </summary>
+        public Player Player { get; }
 
         /// <summary>
         /// Adds an element to the player's display.
@@ -83,9 +178,9 @@
             if (!rateLimitActive)
             {
                 rateLimitActive = true;
-                Timing.CallDelayed(HintRateLimit, OnRateLimitFinished);
+                Timing.CallDelayed(HINT_RATE_LIMIT, OnRateLimitFinished);
 
-                Hint hint = new(ParseElements(), 9999999, true);
+                Hint hint = new(ParseElements(), 99999999, true);
                 Player.ShowHint(hint);
             }
             else
@@ -95,7 +190,7 @@
             }
         }
 
-        internal string ParseElements()
+        internal virtual string ParseElements()
         {
             if (!elements.Any())
             {
@@ -112,8 +207,8 @@
 
             for (int i = 0; i < elements.Count; i++)
             {
-                Log.Debug(i);
                 Element curElement = elements[i];
+                if (!curElement.Enabled) continue;
                 ParsedData parsedData = curElement.ParsedData;
 
                 if (i != 0)
@@ -128,7 +223,7 @@
                 }
 
                 sb.Append(parsedData.Content);
-                sb.Append(Closer);
+                sb.Append(TAG_CLOSER);
 
                 totalOffset += parsedData.Offset;
                 lastPosition = curElement.Position;
@@ -144,6 +239,7 @@
             rateLimitActive = false;
             if (shouldUpdate)
             {
+                shouldUpdate = false;
                 Update();
             }
         }

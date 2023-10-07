@@ -19,6 +19,8 @@ namespace ComAbilities.Patches
     internal static class Scp079AuxManagerFix
     {
         private static readonly ComAbilities Instance = ComAbilities.Instance;
+
+
         [HarmonyPostfix]
         private static void Postfix(Scp079AuxManager __instance, ref float __result)
         {

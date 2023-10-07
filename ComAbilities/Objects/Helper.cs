@@ -1,26 +1,22 @@
 ﻿using ComAbilities.Types;
 using Exiled.API.Enums;
 using Exiled.API.Features;
+using Exiled.API.Features.Doors;
 using Exiled.API.Features.Roles;
 using Exiled.API.Interfaces;
 using PlayerRoles;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Permissions;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace ComAbilities.Objects
 {
-
     internal record IndexIterator<T> (int Index, T Value);
     /// <summary>
     /// Helper functions
     /// </summary>
     internal static class Helper
     {
+        private static ComAbilities Instance => ComAbilities.Instance;
+
         public static Dictionary<RoleTypeId, string> RoleColors = new()
         {
             { RoleTypeId.ChaosRepressor, "#0D7D35" },
@@ -93,6 +89,22 @@ namespace ComAbilities.Objects
         public static IEnumerable<IndexIterator<T>> GetIndexIterator<T>(IEnumerable<T> enumerator)
         {
             return enumerator.Select((v, i) => new IndexIterator<T>(i, v));
+        }
+
+        public static bool CanOpenDoor(Player player, Door door)
+        {
+            if (!Instance.Config.DoComputerPerms) return true;
+            CompManager manager = Instance.CompDict.GetOrError(player);
+
+            KeycardPermissions doorPerms = door.KeycardPermissions;
+            if (!manager.CachedKeycardPermissions.HasFlag(doorPerms))
+            {
+                door.PlaySound(DoorBeepType.PermissionDenied);
+                manager.ShowErrorHint(Instance.Localization.Errors.DisplayAccessDenied);
+
+                return false;
+            }
+            return true;
         }
     }
 }

@@ -8,8 +8,7 @@ namespace Exiled.ComAbilitiesEvents
 
     internal sealed class ServerHandler
     {
-
-        private readonly ComAbilities Instance = ComAbilities.Instance;
+        private static ComAbilities Instance => ComAbilities.Instance;
 
         public static TaskPool RoundTaskPool { get; set; } = new();
 

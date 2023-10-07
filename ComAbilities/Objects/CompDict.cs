@@ -15,7 +15,7 @@ namespace ComAbilities.Objects
     /// </summary>
     public class CompDict : IKillable
     {
-        private readonly static Dictionary<Player, CompManager> _playerComputers = new();
+        private readonly Dictionary<Player, CompManager> _playerComputers = new();
 
 
         public void CleanUp()
@@ -37,17 +37,13 @@ namespace ComAbilities.Objects
 
         public CompManager? Get(Player key)
         {
-            CompManager comp = _playerComputers[key];
+            if (!_playerComputers.ContainsKey(key)) return null;
             return _playerComputers[key];
         }
+
         public bool TryGet(Player key, out CompManager compManager) => _playerComputers.TryGetValue(key, out compManager);
 
-        public CompManager GetOrError(Player key)
-        {
-            CompManager comp = _playerComputers[key];
-            if (comp == null) throw new Exception($"Player {key} not found");
-            return _playerComputers[key];
-        }
+        public CompManager GetOrError(Player key) => _playerComputers[key];
 
         public void Add(Player key) => _playerComputers.Add(key, new CompManager(key));
 

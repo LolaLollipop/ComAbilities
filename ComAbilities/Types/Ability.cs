@@ -18,7 +18,7 @@ namespace ComAbilities.Types
     public interface ICooldownAbility
     {
         public bool OnCooldown { get; }
-        public abstract float CooldownLength { get; }
+        public float CooldownLength { get; }
         public float GetDisplayETA();
     }
     public interface IHotkeyAbility
@@ -70,9 +70,16 @@ namespace ComAbilities.Types
     /// Base class for abilities
     /// </summary>
     public abstract class Ability : IKillable
-      //  where T: struct
     {
-        protected CompManager CompManager { get; }
+        protected static ComAbilities Instance => ComAbilities.Instance;
+        protected CompManager CompManager;
+
+        protected DisplayManager Display => CompManager.Display;
+
+        ~Ability()
+        {
+            CleanUp();
+        }
 
         public abstract string Name { get; }
         public abstract string Description { get; }

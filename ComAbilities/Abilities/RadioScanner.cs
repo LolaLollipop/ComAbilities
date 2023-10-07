@@ -7,15 +7,15 @@ namespace ComAbilities.Abilities
     //[Hotkey]
     public sealed class RadioScanner : Ability, IHotkeyAbility, IReductionAbility, ICooldownAbility
     {
-
-        private readonly static ComAbilities Instance = ComAbilities.Instance;
         private readonly static RadioScannerT ScannerT = Instance.Localization.RadioScanner;
-
         private static PlayerTrackerConfig _config => Instance.Config.PlayerTracker;
+        private Cooldown _cooldown = new();
+
+        private const int _minTimeToStop = 500;
 
         public RadioScanner(CompManager compManager) : base(compManager) { }
 
-        public static List<PlayerRoles.PlayableScps.Scp079.Scp079Role> ActiveScanners = new();
+        public static List<PlayerRoles.PlayableScps.Scp079.Scp079Role> ActiveScanners { get; } = new();
         // --------------------
         public override string Name { get; } = ScannerT.Name;
         public override string Description { get; } = ScannerT.Description;
@@ -33,10 +33,6 @@ namespace ComAbilities.Abilities
 
         public bool IsActive { get; set; } = false;
 
-        private Cooldown _cooldown { get; } = new();
-
-        private const int _minTimeToStop = 500;
-
         // --------------------
 
         public void Trigger()
@@ -47,7 +43,7 @@ namespace ComAbilities.Abilities
                 ActiveScanners.Remove(CompManager.Role!.Base);
                 _cooldown.Start(CooldownLength);
                 CompManager.ActiveAbilities.Remove(this);
-                CompManager.DisplayManager.Update();
+                CompManager.Display.Update();
             }
             else
             {
@@ -55,7 +51,7 @@ namespace ComAbilities.Abilities
                 IsActive = true;
                 ActiveScanners.Add(CompManager.Role!.Base);
                 CompManager.ActiveAbilities.Add(this);
-                CompManager.DisplayManager.Update();
+                CompManager.Display.Update();
             }
         }
 
