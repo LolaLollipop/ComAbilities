@@ -94,18 +94,7 @@ namespace ComAbilities.Abilities
 
         public float GetDisplayETA() => _cooldown.GetDisplayETA();
 
-        public bool TryGetTrackerPlayer(int trackerId, out Player player)
-        {
-            ActiveTracker? activeTracker = Trackers[trackerId];
-            if (activeTracker == null || activeTracker.Player == null)
-            {
-                player = default;
-                return false;
-            }
-            player = activeTracker.Player;
-          
-            return true;
-        }
+        public Player? GetTrackerPlayer(int trackerId) => Trackers[trackerId].Player;
 
         public void HandleInputs(AllHotkeys hotkey)
         {

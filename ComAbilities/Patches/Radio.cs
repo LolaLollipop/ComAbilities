@@ -35,6 +35,7 @@ namespace ComAbilities.Patches
             int index = newInstructions.FindIndex(instruction =>
                 instruction.opcode == OpCodes.Callvirt
                 && (MethodInfo)instruction.operand == Method(typeof(VoiceModuleBase), nameof(VoiceModuleBase.ValidateReceive)));
+
             Label doNothingLabel = generator.DefineLabel();
             LocalBuilder localVar = generator.DeclareLocal(typeof(Scp079Role));
 

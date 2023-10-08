@@ -48,9 +48,10 @@
                 if (Guards.NotEnoughAux(role, trackerConfig.GoToCost, out response)) return false;
                 if (Guards.InvalidLevel(role, gt.ReqLevel, out response)) return false;
 
-                if (comp.PlayerTracker.TryGetTrackerPlayer(result, out Player? trackedPlayer))
+                Player? trackedPlayer = comp.PlayerTracker.GetTrackerPlayer(result);
+                if (trackedPlayer != null)
                 {
-                    gt.Trigger(trackedPlayer!, GoToType.TrackedPlayer);
+                    gt.Trigger(trackedPlayer, GoToType.TrackedPlayer);
                 }
             } else
             {

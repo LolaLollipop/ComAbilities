@@ -23,6 +23,39 @@
     }
 
     /// <summary>
+    /// Represents a wrapper for an element that provides screen functionality.
+    /// </summary>
+    /// <typeparam name="T">The enum to be used as the screen identifier.</typeparam>
+    /// <typeparam name="U">The type of the element to wrap around.</typeparam>
+    public class ScreenEle<T, U> : Element, IScreenElement<T>
+        where T : Enum
+        where U : Element
+    {
+        /// <inheritdoc/>
+        public T Screens { get; set; }
+
+        /// <summary>
+        /// Gets the element that this is wrapping around.
+        /// </summary>
+        public U Inner { get; }
+
+        /// <inheritdoc/>
+        public override ParsedData ParsedData => Inner.ParsedData;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ScreenEle{T, U}"/> class.
+        /// </summary>
+        /// <param name="screens">The screens that this element is visible on.</param>
+        /// <param name="element">The element to be used as the base.</param>
+        public ScreenEle(T screens, U element) : base(element.Position, element.ZIndex)
+        {
+            Inner = element;
+            Screens = screens;
+        }
+    }
+
+
+    /// <summary>
     /// Represents a <see cref="DynamicElement"/> that is tied to a number of screens.
     /// </summary>
     /// <typeparam name="T">The enum to be used as the screen identifier.</typeparam>
@@ -95,7 +128,7 @@
         public GetContent ContentGetter { get; set; }
 
         /// <inheritdoc/>
-        public override ParsedData ParsedData => Parse(ContentGetter());
+        public override ParsedData ParsedData { get => Parse(ContentGetter()); }
     }
 
     /// <summary>
@@ -113,8 +146,13 @@
         {
             Position = position;
             Content = content;
-            ParsedData = Parse(content);
+            cachedParsedData = Parse(content);
         }
+
+        private ParsedData cachedParsedData;
+
+        /// <inheritdoc/>
+        public override ParsedData ParsedData => cachedParsedData;
 
         /// <summary>
         /// Gets the raw content of the element.
@@ -128,7 +166,7 @@
         public virtual void Set(string content)
         {
             Content = content;
-            ParsedData = Parse(content);
+            cachedParsedData = Parse(content);
         }
     }
 
@@ -153,7 +191,7 @@
         /// <summary>
         /// Gets the data used for parsing.
         /// </summary>
-        public virtual ParsedData ParsedData { get; protected set; }
+        public abstract ParsedData ParsedData { get; }
 
         /// <summary>
         /// Gets or sets the position of the element, in pixels, relative to the baseline.
