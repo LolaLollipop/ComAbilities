@@ -15,32 +15,32 @@ namespace ComAbilities.Abilities
     public sealed class Hologram : Ability, IReductionAbility, ICooldownAbility
     {
         private static HologramT HologramT => Instance.Localization.Hologram;
-        private static HologramConfig _config => Instance.Config.Hologram;
+        private static HologramConfig config => Instance.Config.Hologram;
 
-        private readonly Cooldown _cooldown = new();
+        private readonly Cooldown cooldown = new();
         private readonly Cooldown _expireConfirmation = new();
         private PeriodicTask _hologramTask;
 
-        private const ushort _broadcastTime = 3;
+        private const int _broadcastTime = 3;
         private const int _timeUntilExpire = 5;
 
         public Hologram(CompManager compManager) : base(compManager) {
-            _hologramTask = new(_config.Length, 1f, UpdateText, ChangeBack);
+            _hologramTask = new(config.Length, 1f, UpdateText, ChangeBack);
         }
 
         public override string Name { get; } = HologramT.Name;
         public override string Description { get; } = HologramT.Description;
         public override float AuxCost { get; } = 0f;
-        public override int ReqLevel { get; } = _config.Level;
+        public override int ReqLevel { get; } = config.Level;
         public override string DisplayText => string.Format(HologramT.DisplayText, GetLowestAux(), GetHighestAux());
-        public override bool Enabled => _config.Enabled;
+        public override bool Enabled => config.Enabled;
         public string ActiveDisplayText { get; } = "";
 
-        public float CooldownLength => _config.Cooldown;
+        public float CooldownLength => config.Cooldown;    
 
         public float AuxModifier { get; } = 0f;
 
-        public bool OnCooldown => _cooldown.Active;
+        public bool OnCooldown => cooldown.Active;
 
         public bool IsActive => _hologramTask.Enabled;
         public bool ConfirmationPressed => _expireConfirmation.Active;
@@ -93,7 +93,7 @@ namespace ComAbilities.Abilities
                 }
 
                 _hologramTask.Run();
-                _cooldown.Start(CooldownLength);
+                cooldown.Start(CooldownLength);
 
                 Exiled.API.Features.Broadcast bc = new(GetHologramBroadcastText(roleConfig.Role), _broadcastTime, true, Broadcast.BroadcastFlags.Normal);
                 player.Broadcast(bc, true);
@@ -108,7 +108,7 @@ namespace ComAbilities.Abilities
         internal void ChangeBack()
         {
             Player player = this.CompManager.AscPlayer;
-            _cooldown.Start(_config.Cooldown);
+            cooldown.Start(config.Cooldown);
             _hologramTask.CleanUp();
 
             // player.Role.Set(RoleTypeId.Scp079); // setting twice avoids the animation
@@ -144,16 +144,16 @@ namespace ComAbilities.Abilities
             _hologramTask.CleanUp();
         }
 
-        public float GetDisplayETA() => _cooldown.GetDisplayETA();
+        public float GetDisplayETA() => cooldown.GetDisplayETA();
 
         private static float GetLowestAux()
         {
-            IEnumerable<float> vals = _config.RoleLevels.Select((val, index) => val.Cost);
+            IEnumerable<float> vals = config.RoleLevels.Select((val, index) => val.Cost);
             return vals.Min();
         }
         private static float GetHighestAux()
         {
-            IEnumerable<float> vals = _config.RoleLevels.Select((val, index) => val.Cost);
+            IEnumerable<float> vals = config.RoleLevels.Select((val, index) => val.Cost);
             return vals.Max();
         }
         private string GetHologramBroadcastText(RoleTypeId role)

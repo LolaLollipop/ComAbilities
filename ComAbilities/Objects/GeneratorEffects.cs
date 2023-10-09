@@ -1,4 +1,5 @@
 ﻿using ComAbilities.Types;
+using Exiled.API.Extensions;
 using Exiled.API.Features;
 using Exiled.API.Features.Doors;
 using Exiled.API.Interfaces;
@@ -6,33 +7,37 @@ using MEC;
 
 namespace ComAbilities.Objects
 {
-    public class GeneratorEffects
+    // TODO: ensure that this shit doesnt work unless the plugin is enabledw
+    public class GeneratorEffects : IKillable
     {
-        private GeneratorEffects() { }
+        private static GeneratorEffectsConfigs config => ComAbilities.Instance.Config.GeneratorEffectsConfigs;
 
-        private static GeneratorEffects singleton { get; set; } = new();
-        public static GeneratorEffects Singleton => singleton;
-
-        private static GeneratorEffectsConfigs _config => ComAbilities.Instance.Config.GeneratorEffectsConfigs;
-
+        private GeneratorEffects() {
+            IEnumerable<Door> doors = Door.List.Where(x => config.BlacklistedDoors.Contains(x.Type));
+            if (!config.AllowKeycardDoors) doors = doors.Where(x => !x.IsKeycardDoor);
+            availableDoors = doors.OfType<IDamageableDoor>();
+        }
 
         private const int minTimeUntilExplode = 3;
+        private int _lastCount = -1;
+        private CoroutineHandle? CH;
+        private IEnumerable<IDamageableDoor> availableDoors;
 
-        private int _lastCount { get; set; } = -1;
-        public CoroutineHandle? CH { get; set; }
+        private static GeneratorEffects singleton = new();
+        public static GeneratorEffects Singleton => singleton;
 
-        public void Kill()
+        public void CleanUp()
         {
             if (CH.HasValue)
             {
                 Timing.KillCoroutines(CH.Value);
-                CH = null;
+                CH = null; 
             }
         }
 
         public void Update()
         {
-            if (!_config.DoDoorExploding) return;
+            if (!config.DoDoorExploding) return;
             int activatedGens = Generator.Get(Exiled.API.Enums.GeneratorState.Engaged).Count();
             
             // update if number of gens changed
@@ -40,7 +45,7 @@ namespace ComAbilities.Objects
             {
                 _lastCount = activatedGens;
 
-                if (_config.DoorExplodeInterval.TryGetValue(activatedGens, out Range explodeInterval))
+                if (config.DoorExplodeInterval.TryGetValue(activatedGens, out Range explodeInterval))
                 {
                     if (CH.HasValue) Timing.KillCoroutines(CH.Value);
                     CH = Timing.RunCoroutine(DestroyDoors(explodeInterval));   
@@ -50,29 +55,27 @@ namespace ComAbilities.Objects
 
         private IEnumerator<float> DestroyDoors(Range range)
         {
-            //Random random = new((int)new DateTimeOffset().ToUnixTimeMilliseconds());
-            IEnumerable<Door> doors = Door.Get(x => x.IsDamageable && !_config.BlacklistedDoors.Contains(x.Type));
-            if (!_config.AllowKeycardDoors) doors = doors.Where(x => !x.IsKeycardDoor);
-
             var (min, max) = range;
             while (true) {
 
                 yield return Timing.WaitForSeconds(Math.Max(UnityEngine.Random.Range(min, max), minTimeUntilExplode));
-                if (_config.FilterAlreadyDestroyed) doors = doors.Where(x => (x is IDamageableDoor door) && !door.IsDestroyed);
+                if (config.FilterAlreadyDestroyed) availableDoors = availableDoors.Where(x => !x.IsDestroyed);
 
-                if (doors.Count() == 0)
+                if (availableDoors.Count() == 0)
                 {
                     CH = null;
                     Timing.KillCoroutines(Timing.CurrentCoroutine);
                     yield break;
                 }
-                if (doors.ToList().RandomItem() is IDamageableDoor selectedDoor)
-                {
-                    selectedDoor.Break();
-                }
+
+                availableDoors.GetRandomValue().Break();
             }
         }
 
-        internal static void RefreshSingleton() => singleton = new();
+        internal static void RefreshSingleton()
+        {
+            singleton.CleanUp();
+            singleton = new();
+        }
     }
 }

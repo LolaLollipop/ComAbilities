@@ -29,9 +29,11 @@ namespace ComAbilities.Patches
             }
         }
 
+        // TODO: create config for radioscanner
         private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
         {
             List<CodeInstruction> newInstructions = ListPool<CodeInstruction>.Shared.Rent(instructions);
+
             int index = newInstructions.FindIndex(instruction =>
                 instruction.opcode == OpCodes.Callvirt
                 && (MethodInfo)instruction.operand == Method(typeof(VoiceModuleBase), nameof(VoiceModuleBase.ValidateReceive)));

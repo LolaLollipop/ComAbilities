@@ -11,51 +11,51 @@ namespace ComAbilities.Abilities
     //[Hotkey]
     public sealed class RealityScrambler : Ability, IHotkeyAbility, IReductionAbility, ICooldownAbility
     {
-        private static RealityScramblerT RealityScramblerT = Instance.Localization.RealityScrambler;
-        private static RealityScramblerConfig _config { get; } = Instance.Config.RealityScrambler;
+        private static readonly RealityScramblerT RealityScramblerT = Instance.Localization.RealityScrambler;
+        private static RealityScramblerConfig config { get; } = Instance.Config.RealityScrambler;
 
-        private string BroadcastText = _config.BroadcastText;
-        private readonly Cooldown _cooldown = new();
-        private readonly PeriodicTask _regenHumeTask;
+        private string BroadcastText = config.BroadcastText;
+        private readonly Cooldown cooldown = new();
+        private readonly PeriodicTask regenHumeTask;
 
         private const int minTimeToCancel = 3000;
 
         public RealityScrambler(CompManager compManager) : base(compManager)
         {
-            _regenHumeTask = new(_config.Length, _config.TickTime, HumeRegen, OnFinished);
+            regenHumeTask = new(config.Length, config.TickTime, HumeRegen, OnFinished);
         }
 
 
         public override string Name { get; } = RealityScramblerT.Name;
-        public override string Description { get; } = RealityScramblerT.Description;
+        public override string Description => RealityScramblerT.Description;
         //  public string UsageGuide { get; } = "When activated, the Reality Scrambler allows you to regenerate the Hume Shield of all SCPs, regardless of whether or not they are taking damage. However, this will significantly reduce the rate at which you regenerate Aux Power while active.";
         //  public string Lore { get; } = "Site-02 features █ Scranton Reality Anchors, powerful devices that can nullify the abilities of reality-benders. However, in order to facilitate testing, these can be remotely disabled. Doing so greatly increases the reality-bending powers of the various anomalies with the site, so authorization from the Facility Manager is required.";
-        public override float AuxCost { get; } = _config.AuxCost;
-        public override int ReqLevel { get; } = _config.Level;
+        public override float AuxCost => config.AuxCost;
+        public override int ReqLevel => config.Level;
         public override string DisplayText => string.Format(RealityScramblerT.DisplayText, HotkeyButton.ToString().ToUpper(), AuxCost);
-        public string ActiveDisplayText { get; } = RealityScramblerT.ActiveText;
-        public override bool Enabled => _config.Enabled;
+        public string ActiveDisplayText => RealityScramblerT.ActiveText;
+        public override bool Enabled => config.Enabled;
 
-        public AllHotkeys HotkeyButton { get; } = _config.Hotkey;
+        public AllHotkeys HotkeyButton => config.Hotkey;
 
-        public bool OnCooldown => _cooldown.Active;
+        public bool OnCooldown => cooldown.Active;
 
-        public float AuxModifier { get; } = _config.AuxRegenMultiplier;
-        public bool IsActive => _regenHumeTask.Enabled;
+        public float AuxModifier { get; } = config.AuxRegenMultiplier;
+        public bool IsActive => regenHumeTask.Enabled;
 
-        public float CooldownLength { get; } = _config.Cooldown;
+        public float CooldownLength { get; } = config.Cooldown;
 
         public void Toggle()
         {
             // 3 second delay before it can be turned off 
-            if (_regenHumeTask.Enabled && _regenHumeTask.RunningFor() > minTimeToCancel)
+            if (regenHumeTask.Enabled && regenHumeTask.RunningFor() > minTimeToCancel)
             {
-                _regenHumeTask.Interrupt();
-            } else if (!_regenHumeTask.Enabled)
+                regenHumeTask.End();
+            } else if (!regenHumeTask.Enabled)
             {
               //  Trigger();
 
-                _regenHumeTask.Run();
+                regenHumeTask.Run();
                 CompManager.ActiveAbilities.Add(this);
             }
         }
@@ -66,11 +66,11 @@ namespace ComAbilities.Abilities
 
         public void HumeRegen()
         {   
-            if (this.CompManager.Role is null || this.CompManager.Role.Energy < _config.AuxCostTick)
+            if (this.CompManager.Role is null || this.CompManager.Role.Energy < config.AuxCostTick)
             {
                 return;
             }
-            CompManager.Role.Energy -= _config.AuxCostTick; 
+            CompManager.Role.Energy -= config.AuxCostTick; 
 
             Player[] scps = Helper.GetSCPs();
             foreach (var scp in scps)
@@ -84,21 +84,21 @@ namespace ComAbilities.Abilities
                     scp.Broadcast(bc); 
                     HumeShieldModuleBase humeModule = hume.HumeShieldModule;
                     if (humeModule.HsCurrent == humeModule.HsMax) return;
-                    humeModule.HsCurrent += Math.Min(humeModule.HsCurrent * (_config.RegeneratePercentTick * 0.01f) , humeModule.HsMax - humeModule.HsCurrent);
+                    humeModule.HsCurrent += Math.Min(humeModule.HsCurrent * (config.RegeneratePercentTick * 0.01f) , humeModule.HsMax - humeModule.HsCurrent);
                 }
             }
         }
-        public float GetDisplayETA() => _cooldown.GetDisplayETA();
+        public float GetDisplayETA() => cooldown.GetDisplayETA();
 
         public void OnFinished()
         {
-            _cooldown.Start(CooldownLength);
+            cooldown.Start(CooldownLength);
             CompManager.ActiveAbilities.Remove(this);
         }
 
         public override void CleanUp()
         {
-            _regenHumeTask.CleanUp();
+            regenHumeTask.CleanUp();
         }
     }
 }

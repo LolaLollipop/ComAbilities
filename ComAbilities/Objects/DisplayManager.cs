@@ -39,7 +39,7 @@ namespace ComAbilities.Objects
         public ScreenSetElement<Screens> TrackerElement { get; }
         public ScreenSetElement<Screens> ActiveAbilitiesElement { get; }
         public ScreenSetElement<Screens> AvailableAbilitiesElement { get; }
-        public SetElement MessageElement { get; } = new(-100, zIndex: 20);
+        public SetElement MessageElement { get; } = new(400, zIndex: 20);
 
         public DisplayManager(CompManager manager)
         {
@@ -47,8 +47,8 @@ namespace ComAbilities.Objects
             PlayerDisplay = new(manager.AscPlayer, Screens.Main);
 
             TrackerElement = new(Screens.Tracker, 0, zIndex: 10, Get_TrackerMenu());
-            ActiveAbilitiesElement = new(Screens.Main, -500, zIndex: 5, Get_ActiveAbilities());
-            AvailableAbilitiesElement = new(Screens.Main, -500, zIndex: 4, Get_AvailableAbilities());
+            ActiveAbilitiesElement = new(Screens.Main, 600, zIndex: 5, Get_ActiveAbilities());
+            AvailableAbilitiesElement = new(Screens.Main, 300, zIndex: 4, Get_AvailableAbilities());
 
             PlayerDisplay.Add(MessageElement, TrackerElement, ActiveAbilitiesElement, AvailableAbilitiesElement);
         }
@@ -137,7 +137,7 @@ namespace ComAbilities.Objects
             return sb.ToString();
         }
 
-        // TODO: do this lol
+        // TODO: do this thing lol
         public string AddMessage(string message)
         {
             return string.Empty;

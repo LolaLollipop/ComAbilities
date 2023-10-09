@@ -20,24 +20,21 @@ namespace ComAbilities.Abilities
     public sealed class GoTo : Ability, ICooldownAbility
     {
         private static GoToT GoToT => Instance.Localization.GoTo;
-        private static GoToScpConfig _config => Instance.Config.GoToScp;
-        public GoTo(CompManager compManager) : base(compManager) { 
-        
-        }
+        private static GoToScpConfig config => Instance.Config.GoToScp;
 
-        public override string Name { get; } = GoToT.Name;
-        public override string Description { get; } = GoToT.Description;
-        public override float AuxCost { get; } = _config.AuxCost;
-        public override int ReqLevel => _config.Level;
+        private readonly Cooldown cooldown = new();
+
+        public GoTo(CompManager compManager) : base(compManager) { }
+
+        public override string Name => GoToT.Name;
+        public override string Description => GoToT.Description;
+        public override float AuxCost => config.AuxCost;
+        public override int ReqLevel => config.Level;
         public override string DisplayText => string.Format(GoToT.DisplayText, AuxCost, Instance.Config.PlayerTracker.GoToCost);
+        public override bool Enabled => config.Enabled;
 
-        public override bool Enabled => _config.Enabled;
-        public bool OnCooldown => _cooldown.Active;
-
-        public float CooldownLength => _config.Cooldown;
-
-        private Cooldown _cooldown = new();
-
+        public bool OnCooldown => cooldown.Active;
+        public float CooldownLength => config.Cooldown;
 
         public void Trigger(Player player, GoToType goToType)
         {
@@ -49,23 +46,24 @@ namespace ComAbilities.Abilities
             if (chosenCamera == null) return;
             CompManager.Role!.Camera = chosenCamera;
 
-            if (goToType == GoToType.SCP)
+            switch (goToType)
             {
-                CompManager.DeductAux(Instance.Config.GoToScp.AuxCost);
-                _cooldown.Start(Instance.Config.GoToScp.Cooldown);
-            }
-            else if (goToType == GoToType.TrackedPlayer)
-            {
-                CompManager.DeductAux(Instance.Config.PlayerTracker.GoToCost);
-                _cooldown.Start(Instance.Config.PlayerTracker.GoToCooldown);
+                case GoToType.SCP:
+                    CompManager.DeductAux(config.AuxCost);
+                    cooldown.Start(config.Cooldown);
+                    break;
+                case GoToType.TrackedPlayer:
+                    CompManager.DeductAux(Instance.Config.PlayerTracker.GoToCost);
+                    cooldown.Start(Instance.Config.PlayerTracker.GoToCooldown);
+                    break;
             }
         }
 
-        public float GetDisplayETA() => _cooldown.GetDisplayETA();
+        public float GetDisplayETA() => cooldown.GetDisplayETA();
 
         public override void CleanUp()
         {
-            // _cooldownTask.AttemptKill();
+            // cooldownTask.AttemptKill();
         }
     }
 }

@@ -22,6 +22,7 @@ namespace ComAbilities.Patches
     internal static class Scp079Overcharge
     {
         private static readonly ComAbilities Instance = ComAbilities.Instance;
+
         [HarmonyPrefix]
         private static void Prefix(Scp079Recontainer __instance)
         {

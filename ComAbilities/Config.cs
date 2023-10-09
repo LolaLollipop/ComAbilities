@@ -15,7 +15,11 @@
     public sealed class Config : IConfig
     {
         public bool IsEnabled { get; set; } = true;
+#if DEBUG
         public bool Debug { get; set; } = true;
+#else
+        public bool Debug { get; set; } = false;
+#endif
         public string Localization { get; set; } = "English";
 
         public DistressSignalConfig DistressSignal { get; set; } = new();
@@ -186,6 +190,7 @@
     }
 
     public record HologramRoleConfig(RoleTypeId Role, int Level, float Cost);
+
     public interface IAbilityConfig 
     {
         public bool Enabled { get; set; }

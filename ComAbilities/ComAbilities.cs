@@ -19,7 +19,7 @@
         private ServerHandler serverHandler;
         private Scp079Handler scp079Handler;
 
-        public override string Author { get; } = "Rue";
+        public override string Author { get; } = "Rue <3";
         public override string Name { get; } = "ComAbilities";
         public override string Prefix { get; } = "ComAbilities";
         public override Version Version { get; } = new(1, 0, 0);

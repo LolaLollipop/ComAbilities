@@ -122,22 +122,25 @@ namespace ComAbilities.Objects
                 return;
             }
 
-            if (!this._hotkeysDict.TryGetValue(hotkey, out IHotkeyAbility ability)) return;
-
-            if (ability is ICooldownAbility rateLimitedAbility)
+            if (this._hotkeysDict.TryGetValue(hotkey, out IHotkeyAbility ability))
             {
-                if (Guards.OnCooldown(rateLimitedAbility, out string errorCooldown))
-                {   
-                    ShowErrorHint(errorCooldown);
+                if (ability is ICooldownAbility rateLimitedAbility)
+                {
+                    if (Guards.OnCooldown(rateLimitedAbility, out string errorCooldown))
+                    {
+                        ShowErrorHint(errorCooldown);
+                        return;
+                    }
+                }
+
+                if (Guards.NotEnoughAuxDisplay(Role, ability.AuxCost, out string response))
+                {
+                    ShowErrorHint(response);
                     return;
                 }
+
+                ability.Trigger();
             }
-            if (Guards.NotEnoughAuxDisplay(Role, ability.AuxCost, out string response))
-            {
-                ShowErrorHint(response);
-                return;
-            }
-            ability.Trigger();
         }
 
         public void DeductAux(float cost)

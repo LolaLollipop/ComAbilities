@@ -18,7 +18,8 @@ namespace ComAbilities.Patches
     [HarmonyPatch(typeof(Scp079DoorLockChanger), nameof(Scp079DoorLockChanger.ServerProcessCmd))]
     internal static class LockPatch
     {
-        private static readonly ComAbilities Instance = ComAbilities.Instance;
+        private static ComAbilities Instance => ComAbilities.Instance;
+
         private static bool ValidDoor(ReferenceHub refHub, DoorVariant door)
         {
             if (!Instance.Config.DoComputerPerms) return true;
@@ -35,32 +36,37 @@ namespace ComAbilities.Patches
             }
             return true;
         }
+
         private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
         {
             List<CodeInstruction> newInstructions = ListPool<CodeInstruction>.Shared.Rent(instructions);
 
-            int index = newInstructions.FindIndex(instruction =>
-                instruction.opcode == OpCodes.Call
-                && (MethodInfo)instruction.operand == PropertyGetter(typeof(Scp079AbilityBase), nameof(Scp079AbilityBase.LostSignalHandler)));
-
-            index -= 1;
-
-            Label returnLabel = generator.DefineLabel();
-
-            Collection<CodeInstruction> collection = new()
+            if (Instance.Config.DoComputerPerms)
             {
-                new CodeInstruction(OpCodes.Ldarg_0),
-                // if (!ValidateDoor(this.LastDoor, base.Owner)) return;
-                
-                new(OpCodes.Callvirt, PropertyGetter(typeof(Scp079DoorLockChanger), nameof(Scp079DoorLockChanger.Owner))),
-                new(OpCodes.Ldarg_0),
-                new(OpCodes.Ldfld, Field(typeof(Scp079DoorLockChanger), nameof(Scp079DoorLockChanger.LastDoor))),
-                new(OpCodes.Call, Method(typeof(LockPatch), nameof(ValidDoor), new [] { typeof(ReferenceHub), typeof(DoorVariant) })),
-                new(OpCodes.Brfalse_S, returnLabel),
-            };
-            newInstructions.InsertRange(index, collection);
+                int index = newInstructions.FindIndex(instruction =>
+                    instruction.opcode == OpCodes.Call
+                    && (MethodInfo)instruction.operand == PropertyGetter(typeof(Scp079AbilityBase), nameof(Scp079AbilityBase.LostSignalHandler)));
 
-            newInstructions[newInstructions.Count - 1].labels.Add(returnLabel);
+                index -= 1;
+
+                Label returnLabel = generator.DefineLabel();
+
+                Collection<CodeInstruction> collection = new()
+                {
+                    // if (!ValidateDoor(this.LastDoor, base.Owner)) return;
+                    new CodeInstruction(OpCodes.Ldarg_0),
+                    new(OpCodes.Callvirt, PropertyGetter(typeof(Scp079DoorLockChanger), nameof(Scp079DoorLockChanger.Owner))),
+                    new(OpCodes.Ldarg_0),
+                    new(OpCodes.Ldfld, Field(typeof(Scp079DoorLockChanger), nameof(Scp079DoorLockChanger.LastDoor))),
+                    new(OpCodes.Call, Method(typeof(LockPatch), nameof(ValidDoor), new [] { typeof(ReferenceHub), typeof(DoorVariant) })),
+                    new(OpCodes.Brfalse_S, returnLabel),
+                };
+
+                newInstructions.InsertRange(index, collection);
+
+                newInstructions[newInstructions.Count - 1].labels.Add(returnLabel);
+
+            }
 
             foreach (CodeInstruction instruction in newInstructions)
                 yield return instruction;

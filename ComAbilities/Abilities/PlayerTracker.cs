@@ -15,34 +15,34 @@ namespace ComAbilities.Abilities
     {
         private readonly static TrackerT TrackerT = Instance.Localization.Tracker;
 
-        private static PlayerTrackerConfig _config => Instance.Config.PlayerTracker;
+        private static PlayerTrackerConfig config => Instance.Config.PlayerTracker;
 
-        private readonly Cooldown _cooldown = new();
+        private readonly Cooldown cooldown = new();
         //public bool InterfaceActive => CompManager.DisplayManager.SelectedScreen == DisplayTypes.Tracker;
 
         public PlayerTracker(CompManager compManager) : base(compManager) {
             Trackers = new() {
-                new ActiveTracker(_config.Length, UpdateUI, ReqLevel),
-                new ActiveTracker(_config.Length, UpdateUI, _config.Slot2Level)
+                new ActiveTracker(config.Length, UpdateUI, ReqLevel),
+                new ActiveTracker(config.Length, UpdateUI, config.Slot2Level)
             };
         }
         public override string Name { get; } = TrackerT.Name;
         public override string Description { get; } = TrackerT.Description;
        // public string UsageGuide { get; } = "Once you open the Tracker menu, you can select a tracker slot. Afterwards, ping a person to begin tracking them in that slot. Once you start tracking a person, you can run .goto [slot] to instantly move your camera to the person. However, for every active tracker, your regeneration rate will decrease.";
        // public string Lore { get; } = "As part of an effort to combat the increasing number of breaches by SCP-106, SCP-173, and SCP-████, a network of sensors, light detectors, and other devices was installed within the facility to act as a support system to the Breach Scanner. This system allows for real-time monitoring and tracking of anomalies, although it has been utilized against hostile GOI forces and rogue personnel.";
-        public override float AuxCost { get; } = _config.AuxCost;
-        public override int ReqLevel { get; } = _config.Level;
+        public override float AuxCost { get; } = config.AuxCost;
+        public override int ReqLevel { get; } = config.Level;
         public override string DisplayText => string.Format(TrackerT.DisplayText, Instance.Localization.Shared.Hotkeys[HotkeyButton].ToUpper(), AuxCost);
         public string ActiveDisplayText => string.Format(TrackerT.ActiveDisplayText, Trackers.Count(x => x.Enabled));
-        public override bool Enabled => _config.Enabled;
+        public override bool Enabled => config.Enabled;
 
-        public float AuxModifier => (float)Math.Pow(_config.AuxMultiplier,
+        public float AuxModifier => (float)Math.Pow(config.AuxMultiplier,
             Math.Min(1, Trackers.Count(x => x.Enabled)));
 
-        public AllHotkeys HotkeyButton { get; } = _config.Hotkey;
+        public AllHotkeys HotkeyButton { get; } = config.Hotkey;
 
-        public float CooldownLength { get; } = _config.Cooldown;
-        public bool OnCooldown => _cooldown.Active;
+        public float CooldownLength { get; } = config.Cooldown;
+        public bool OnCooldown => cooldown.Active;
 
         public bool IsActive => Trackers.Any(x => x.Player != null && x.Enabled);
 
@@ -69,7 +69,7 @@ namespace ComAbilities.Abilities
         {
             Trackers.StartSelected(player);
 
-            _cooldown.Start(CooldownLength);
+            cooldown.Start(CooldownLength);
             CompManager.DeductAux(AuxCost);
 
             UpdateUI();
@@ -92,7 +92,7 @@ namespace ComAbilities.Abilities
             Display.Update(Screens.Tracker);
         }
 
-        public float GetDisplayETA() => _cooldown.GetDisplayETA();
+        public float GetDisplayETA() => cooldown.GetDisplayETA();
 
         public Player? GetTrackerPlayer(int trackerId) => Trackers[trackerId].Player;
 

@@ -8,31 +8,31 @@ namespace ComAbilities.Abilities
     public sealed class BroadcastMsg : Ability, ICooldownAbility
     {
         private static BroadcastMessageT BroadcastMessageT => Instance.Localization.BroadcastMessage;
-        private static BroadcastMessageConfig _config => Instance.Config.BroadcastMessage;
+        private static BroadcastMessageConfig config => Instance.Config.BroadcastMessage;
+
+        private Cooldown cooldown { get; } = new();
 
         public BroadcastMsg(CompManager compManager) : base(compManager) { }
 
-        public override string Name { get; } = BroadcastMessageT.Name;
-        public override string Description { get; } = BroadcastMessageT.Description;
-        public override float AuxCost { get; } = _config.AuxCost;
-        public override int ReqLevel { get; } = _config.Level;
+        public override string Name => BroadcastMessageT.Name;
+        public override string Description => BroadcastMessageT.Description;
+        public override float AuxCost => config.AuxCost;
+        public override int ReqLevel => config.Level;
         public override string DisplayText => string.Format(BroadcastMessageT.DisplayText, AuxCost);
-        public override bool Enabled { get; } = _config.Enabled;
+        public override bool Enabled => config.Enabled;
  
-        
-        public float CooldownLength { get; } = _config.Cooldown;
-        public bool OnCooldown => _cooldown.Active;
-        private Cooldown _cooldown { get; } = new();
+        public float CooldownLength => config.Cooldown;
+        public bool OnCooldown => cooldown.Active;
 
-        public float GetDisplayETA() => _cooldown.GetDisplayETA();
+        public float GetDisplayETA() => cooldown.GetDisplayETA();
 
         public void Trigger(string content)
         {
             //  value.Length <= maxChars ? value : value.Substring(0, maxChars) + "...";
             string playerName = Helper.GetCleanText(CompManager.AscPlayer.DisplayNickname);
-            string messageName = playerName.Length <= _config.MaxPlayerNameLength ? playerName : playerName.Substring(0, _config.MaxPlayerNameLength) + "...";
+            string messageName = playerName.Length <= config.MaxPlayerNameLength ? playerName : playerName.Substring(0, config.MaxPlayerNameLength) + "...";
 
-            Exiled.API.Features.Broadcast broadcast = new(string.Format(BroadcastMessageT.BroadcastFormat, messageName, Helper.GetCleanText(content), (ushort)_config.MessageDuration));
+            Exiled.API.Features.Broadcast broadcast = new(string.Format(BroadcastMessageT.BroadcastFormat, messageName, Helper.GetCleanText(content), (ushort)config.MessageDuration));
             foreach (Player scp in Helper.GetSCPs())
             {
                 scp.Broadcast(broadcast);
