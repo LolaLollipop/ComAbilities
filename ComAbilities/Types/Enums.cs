@@ -14,6 +14,12 @@ using Utf8Json.Resolvers.Internal;
 
 namespace ComAbilities.Types
 {
+    public enum MessageType
+    {
+        Error,
+        Info
+    }
+
     public enum GoToType
     {
         SCP,

@@ -18,7 +18,6 @@ namespace ComAbilities.Types
     public interface ICooldownAbility
     {
         public bool OnCooldown { get; }
-        public float CooldownLength { get; }
         public float GetDisplayETA();
     }
     public interface IHotkeyAbility

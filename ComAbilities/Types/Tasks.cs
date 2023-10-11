@@ -15,48 +15,24 @@ namespace ComAbilities.Types.RueTasks
     /// </summary>
     public class PeriodicTask : TaskBase
     {
-        public bool Enabled => (CH != null) && Timing.IsRunning(CH.Value); 
-
-        public float Interval { get; private set; }
-        public Action Action { get; private set; }
-        public Action? OnFinished { get; private set; }
+        public float Interval { get; set; }
+        public Action Action { get; set; }
+        public Action? OnFinished { get; set; }
         public bool PersistGC { get; set; } = false;
 
-        private CoroutineHandle? killer;
-
-        public PeriodicTask(float time, float interval, Action action, Action? onFinished = null)
+        public PeriodicTask(float time, float interval, Action action, Action? onFinished = null) : base(time)
         {
-            Time = time;
             Interval = interval;
             Action = action;
             OnFinished = onFinished;
         }
 
-        ~PeriodicTask()
+        public override void Run()
         {
-            if (PersistGC) return;
-            if (killer != null) Timing.KillCoroutines(killer.Value);
-            if (CH != null) Timing.KillCoroutines(CH.Value);
-        }
+            cH?.Kill();
+            cH = Timing.RunCoroutine(RunActionPeriodically(Action, OnEnd, Time, Interval));
 
-        public override CoroutineHandle Run(float? time = null)
-        {
-
-            killer = Timing.CallDelayed(time ?? Time, () =>
-            {
-                CH?.Kill();
-                OnEnd();
-            });
-            CH = Timing.RunCoroutine(RunAction(Action, Interval));
-            return CH.Value;
-        }
-        private IEnumerator<float> RunAction(Action action, float interval)
-        {
-            while (true)
-            {
-                action();
-                yield return Timing.WaitForSeconds(interval);
-            }
+            base.Run();
         }
 
         protected override void OnEnd()
@@ -65,12 +41,28 @@ namespace ComAbilities.Types.RueTasks
             {
                 OnFinished();
             }
+
             base.OnEnd();
         }
-        public override void CleanUp()
+
+        private static IEnumerator<float> RunActionPeriodically(Action action, Action onFinished, float time, float interval)
         {
-            killer?.Kill();
-            base.CleanUp();
+            int numTimes = (int)Math.Floor((time / interval) + 0.005); // account for floating point errors
+
+            for (int i = 0; i < numTimes; i++)
+            {
+                // interval: 100, time left: 250 (run)
+                // interval: 100, time left: 150 (run)
+                // interval: 100, time left: 50 (don't run)
+                float remainingTime = time - (interval * i);
+                yield return Timing.WaitForSeconds(Math.Min(interval, remainingTime));
+                if (remainingTime > interval)
+                {
+                    action();
+                }
+            }
+
+            onFinished();
         }
     }
     /// <summary>
@@ -78,75 +70,74 @@ namespace ComAbilities.Types.RueTasks
     /// </summary>
     public class UpdateTask : TaskBase
     {
-        public bool Enabled { get { return (CH != null) && Timing.IsRunning((CoroutineHandle)CH); } }
-        public bool IsRunning { get; private set; } = false;
         public Action EndAction { get; }
-        public bool PersistGC { get; set; } = false;
 
-        public UpdateTask(float time, Action endAction)
+        public UpdateTask(float time, Action endAction) : base(time)
         {
-            Time = time;
             EndAction = endAction;
         }
-        ~UpdateTask()
+
+        public override void Run()
         {
-            if (CH != null) Timing.KillCoroutines(CH.Value);
+            cH?.Kill();
+
+            cH = Timing.CallDelayed(Time, OnEnd);
+
+            base.Run();
         }
 
-        public override CoroutineHandle Run(float? time = null)
-        {
-            if (CH.HasValue) Timing.KillCoroutines(CH.Value);
-
-            IsRunning = true;
-            CH = Timing.CallDelayed(time ?? this.Time, OnEnd);
-
-            return CH.Value;
-        }
-        protected override void OnStart()
-        {
-            base.OnStart();
-        }
         protected override void OnEnd()
         {
-            this.IsRunning = false;
             EndAction();
             base.OnEnd();
         }
+
     }
 
     public abstract class TaskBase : IKillable
     {
-        public CoroutineHandle? CH { get; protected set; }
+        protected CoroutineHandle? cH;
+
+        public bool Enabled { get; protected set; } = false;
+
         public long? StartedAt { get; private set; }
-        public float Time { get; protected set; }
-        public abstract CoroutineHandle Run(float? time = null);
+        public float Time { get; }
 
-        protected virtual void OnEnd() { }
-
-        protected virtual void OnStart()
+        public TaskBase(float time)
         {
-            CH = Run(Time);
+            Time = time;
+        }
+
+        ~TaskBase()
+        {
+            CleanUp();
+        }
+
+        /// <summary>
+        /// Starts this task.
+        /// </summary>
+        public virtual void Run()
+        {
+            Enabled = true;
             StartedAt = new DateTimeOffset().ToUnixTimeMilliseconds();
         }
 
         /// <summary>
-        /// Ends the task and calls the OnEnd function
+        /// Ends this task and calls OnEnd.
         /// </summary>
-        public void Interrupt()
+        public virtual void End()
         {
-            CH?.Kill();
-
-            StartedAt = null;
+            CleanUp();
             OnEnd();
         }
 
         /// <summary>
-        /// Ends the task and does NOT call the OnEnd function
+        /// Ends the task without calling OnEnd.
         /// </summary>
         public virtual void CleanUp()
         {
-            CH?.Kill();
-            StartedAt = null;
+            cH?.Kill();
+            Reset();
         }
 
         public float? GetETA()
@@ -163,6 +154,14 @@ namespace ComAbilities.Types.RueTasks
             return new DateTimeOffset().ToUnixTimeMilliseconds() - StartedAt;
         }
 
+        protected virtual void OnEnd() { }
+
+        private void Reset()
+        {
+            Enabled = false;
+            cH = null;
+            StartedAt = null;
+        }
         //public void Pool(TaskPool pool) => pool.
     }
 }

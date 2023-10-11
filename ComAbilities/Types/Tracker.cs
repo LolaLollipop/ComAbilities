@@ -100,30 +100,30 @@ namespace ComAbilities.Types
     }
     public class ActiveTracker : IKillable
     {
-        private readonly UpdateTask _expireTask;
-        private readonly Action _killer;
+        private readonly UpdateTask expireTask;
+        private readonly Action killer;
 
         public Player? Player { get; private set; }
         public int Level { get; }
-        public bool Enabled => _expireTask.IsRunning;
+        public bool Enabled => expireTask.Enabled;
 
         public ActiveTracker(float duration, Action killer, int level)
         {
-            _killer = killer;
-            _expireTask = new UpdateTask(duration, () => { Player = null; _killer(); });
+            this.killer = killer;
+            expireTask = new UpdateTask(duration, () => { Player = null; killer(); });
             this.Level = level;
         }
 
         public void Start(Player player)
         {
             Player = player;
-            _expireTask.Run();
+            expireTask.Run();
         }
 
         public void CleanUp()
         {
-            _killer();
-            _expireTask.CleanUp();
+            killer();
+            expireTask.CleanUp();
         }
     }
 }

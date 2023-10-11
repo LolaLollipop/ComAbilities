@@ -26,6 +26,7 @@ namespace ComAbilities.Patches
         {
 
         }
+
         private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
         {
             List<CodeInstruction> newInstructions = ListPool<CodeInstruction>.Shared.Rent(instructions);
@@ -44,7 +45,7 @@ namespace ComAbilities.Patches
                 new(OpCodes.Ldarg_0),
                 new(OpCodes.Ldfld, Field(typeof(Scp079BlackoutRoomAbility), nameof(Scp079BlackoutRoomAbility._blackoutCooldowns))),
                 new(OpCodes.Ldarg_0),
-                new(OpCodes.Ldfld, Field(typeof(Scp079BlackoutRoomAbility), nameof(Scp079BlackoutRoomAbility.cooldown))),
+                new(OpCodes.Ldfld, Field(typeof(Scp079BlackoutRoomAbility), nameof(Scp079BlackoutRoomAbility._cooldown))),
   
                 new(OpCodes.Call, Method(typeof(BlackoutRoomCooldown), nameof(ShowErrorHint), new [] { typeof(PlayerRoleBase), typeof(RoomLightController), typeof(Dictionary<uint, double>), typeof(float) }))
                // CodeInstruction.Call(typeof(BlackoutRoomCooldown), nameof(ShowErrorHint))

@@ -70,7 +70,7 @@ namespace ComAbilities.Abilities
             Trackers.StartSelected(player);
 
             cooldown.Start(CooldownLength);
-            CompManager.DeductAux(AuxCost);
+            if (CompManager.Role != null) CompManager.Role.Energy -= AuxCost;
 
             UpdateUI();
         }

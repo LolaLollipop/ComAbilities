@@ -143,12 +143,6 @@ namespace ComAbilities.Objects
             }
         }
 
-        public void DeductAux(float cost)
-        {
-            if (this.Role == null) throw new Exception("No role");
-            this.Role.Energy -= cost;
-        }
-
         public void ShowErrorHint(string errorString)
         {
             if (!_errorCooldown.Active)
@@ -161,55 +155,13 @@ namespace ComAbilities.Objects
             }
         }
 
-        public IEnumerable<Ability> GetNewAbilities(int currentLevel) => this.AbilityInstances.Where(x => x.ReqLevel == currentLevel);
-
-        public string GetActiveAbilityText()
-        {
-            if (!this.ActiveAbilities.Any() || Role == null) return string.Empty;
-
-            double regenSpeed = this.Role.AuxManager.RegenSpeed;
-            StringBuilder sb = new();
-
-            sb.Append("<color=#ad251c>");
-
-            if (regenSpeed == 0)
-            {
-                sb.Append(Instance.Localization.Shared.NoAuxRegen);
-            }
-            else
-            {
-                float percent = (float)Math.Round(regenSpeed / Role.AuxManager._regenerationPerTier[Role.Level] * 100, 3);
-                sb.AppendFormat(Instance.Localization.Shared.RegenSpeedFormat, percent);
-            }
-
-            return sb.ToString();
-
-            //DisplayManager.SetElement(Elements.ActiveAbilities, sb.ToString());
-            //DisplayManager.Update(DisplayTypes.Main);
-        }
-
-        public string GetAvailableAbilityText()
-        {
-            StringBuilder sb = new("<align=right><size=50%><line-height=120%><voffset=10em><color=#adadad>");
-            sb.Append(Instance.Localization.Shared.AvailableAbilities);
-            sb.Append("<br>");
-
-            if (Role == null) return sb.ToString();
-
-            foreach (Ability ability in AbilityInstances)
-            {
-                if (ability.ValidateLevel(Role.Level))
-                {
-                    sb.AppendLine(ability.DisplayText);
-                }
-            }
-            return sb.ToString();
+        public void UpdatePermissions() {
+            if (this.Role != null) CachedKeycardPermissions = CalculatePermissions(Role.Level);
         }
 
         public static KeycardPermissions CalculatePermissions(int curLevel)
         {
             Dictionary<KeycardPermissions, int> reqLevelsDict = Instance.Config.DoorPermissions;
-
 
             KeycardPermissions newPerms = new();
             IEnumerable<KeycardPermissions> permsList = Enum.GetValues(typeof(KeycardPermissions)).Cast<KeycardPermissions>();
@@ -222,17 +174,14 @@ namespace ComAbilities.Objects
                     {
                         newPerms |= perm;
                     }
-                } else
+                }
+                else
                 {
                     newPerms |= perm;
                 }
             }
             return newPerms;
-        }
-
-        public void UpdatePermissions() {
-            if (this.Role != null) CachedKeycardPermissions = CalculatePermissions(Role.Level);
-        }
+        }   
 
         /// <summary>
         /// Generates an aux ETA for an <see cref="Scp079Role"/>.

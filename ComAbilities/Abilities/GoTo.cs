@@ -19,22 +19,22 @@ namespace ComAbilities.Abilities
 {
     public sealed class GoTo : Ability, ICooldownAbility
     {
-        private static GoToT GoToT => Instance.Localization.GoTo;
-        private static GoToScpConfig config => Instance.Config.GoToScp;
+        private static GoToT Translation => Instance.Localization.GoTo;
+        private static GoToScpConfig SCPConfig => Instance.Config.GoToScp;
+        private static PlayerTrackerConfig TrackerConfig => Instance.Config.PlayerTracker;
 
         private readonly Cooldown cooldown = new();
 
         public GoTo(CompManager compManager) : base(compManager) { }
 
-        public override string Name => GoToT.Name;
-        public override string Description => GoToT.Description;
-        public override float AuxCost => config.AuxCost;
-        public override int ReqLevel => config.Level;
-        public override string DisplayText => string.Format(GoToT.DisplayText, AuxCost, Instance.Config.PlayerTracker.GoToCost);
-        public override bool Enabled => config.Enabled;
+        public override string Name => Translation.Name;
+        public override string Description => Translation.Description;
+        public override float AuxCost { get; } = 0;
+        public override int ReqLevel => CalculateReqLevel();
+        public override string DisplayText => string.Format(Translation.DisplayText, SCPConfig.AuxCost, TrackerConfig.GoToCost);
+        public override bool Enabled => SCPConfig.Enabled || TrackerConfig.Enabled;
 
         public bool OnCooldown => cooldown.Active;
-        public float CooldownLength => config.Cooldown;
 
         public void Trigger(Player player, GoToType goToType)
         {
@@ -49,21 +49,22 @@ namespace ComAbilities.Abilities
             switch (goToType)
             {
                 case GoToType.SCP:
-                    CompManager.DeductAux(config.AuxCost);
-                    cooldown.Start(config.Cooldown);
+                    if (CompManager.Role != null)
+                        CompManager.Role.Energy -= SCPConfig.AuxCost;
+                    cooldown.Start(SCPConfig.Cooldown);
                     break;
                 case GoToType.TrackedPlayer:
-                    CompManager.DeductAux(Instance.Config.PlayerTracker.GoToCost);
-                    cooldown.Start(Instance.Config.PlayerTracker.GoToCooldown);
+                    if (CompManager.Role != null)
+                        CompManager.Role.Energy -= SCPConfig.AuxCost;
+                    cooldown.Start(TrackerConfig.GoToCooldown);
                     break;
             }
         }
 
+        private int CalculateReqLevel() => Math.Min(SCPConfig.Enabled ? SCPConfig.Level : 6, TrackerConfig.Enabled ? TrackerConfig.Level : 6);
+
         public float GetDisplayETA() => cooldown.GetDisplayETA();
 
-        public override void CleanUp()
-        {
-            // cooldownTask.AttemptKill();
-        }
+        public override void CleanUp() { }
     }
 }

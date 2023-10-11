@@ -1,32 +1,26 @@
 ﻿namespace ComAbilities.Types.RueTasks
 {
-    using Exiled.API.Features;
-    using MEC;
     using System.Collections;
-    using System.Diagnostics.CodeAnalysis;
     using System.Reflection;
-    using UnityEngine;
 
-    [AttributeUsage(AttributeTargets.Property)]
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
     public class IncludeECAttribute : Attribute { }
 
     public abstract class Enumeration<T> : IReadOnlyCollection<T>
     {
-        private T[] properties;
+        protected IReadOnlyCollection<T> properties { get; private set; }
 
-        public Enumeration() {
-            properties = this.GetType()
+        public Enumeration(Type type) {
+            properties = type
                 .GetProperties(BindingFlags.Public | BindingFlags.DeclaredOnly)
                 .Where(x => x.PropertyType == typeof(T))
                 .Where(x => Attribute.IsDefined(x, typeof(IncludeECAttribute)))
-                .Select(f => f.GetValue(null))
+                .Select(f => f.GetValue(this))
                 .Cast<T>()
                 .ToArray();
         }
 
         public int Count => properties.Count();
-
-
 
         public IEnumerator<T> GetEnumerator() => properties.AsEnumerable().GetEnumerator();
 

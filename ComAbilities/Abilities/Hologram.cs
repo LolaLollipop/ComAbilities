@@ -14,25 +14,25 @@ namespace ComAbilities.Abilities
 {
     public sealed class Hologram : Ability, IReductionAbility, ICooldownAbility
     {
-        private static HologramT HologramT => Instance.Localization.Hologram;
+        private static HologramT Translation => Instance.Localization.Hologram;
         private static HologramConfig config => Instance.Config.Hologram;
 
         private readonly Cooldown cooldown = new();
         private readonly Cooldown _expireConfirmation = new();
-        private PeriodicTask _hologramTask;
+        private readonly PeriodicTask _hologramTask;
 
         private const int _broadcastTime = 3;
         private const int _timeUntilExpire = 5;
 
         public Hologram(CompManager compManager) : base(compManager) {
-            _hologramTask = new(config.Length, 1f, UpdateText, ChangeBack);
+            _hologramTask = new(config.Length, 1, UpdateText, ChangeBack);
         }
 
-        public override string Name { get; } = HologramT.Name;
-        public override string Description { get; } = HologramT.Description;
-        public override float AuxCost { get; } = 0f;
-        public override int ReqLevel { get; } = config.Level;
-        public override string DisplayText => string.Format(HologramT.DisplayText, GetLowestAux(), GetHighestAux());
+        public override string Name => Translation.Name;
+        public override string Description => Translation.Description;
+        public override float AuxCost => 0f;
+        public override int ReqLevel => config.Level;
+        public override string DisplayText => string.Format(Translation.DisplayText, GetLowestAux(), GetHighestAux());
         public override bool Enabled => config.Enabled;
         public string ActiveDisplayText { get; } = "";
 
@@ -105,6 +105,7 @@ namespace ComAbilities.Abilities
         {
             _expireConfirmation.Start(_timeUntilExpire);
         }
+
         internal void ChangeBack()
         {
             Player player = this.CompManager.AscPlayer;
@@ -132,10 +133,25 @@ namespace ComAbilities.Abilities
                 this.CompManager.AscPlayer.SessionVariables.Remove(Hologram.SessionVariable);
             });
         }
-        internal void UpdateText()
+
+        private string GetHologramBroadcastText(RoleTypeId role)
         {
-            Exiled.API.Features.Broadcast bc = new(GetHologramBroadcastText(CompManager.AscPlayer.Role), _broadcastTime, true, Broadcast.BroadcastFlags.Normal);
-            CompManager.AscPlayer.Broadcast(bc, true);
+            // string text = Instance.Config.Hologram.BroadcastText;
+
+            string confirmationMessage;
+            if (ConfirmationPressed)
+            {
+                confirmationMessage = Translation.CancelMessageAfter;
+            }
+            else
+            {
+                confirmationMessage = Translation.CancelMessageBefore;
+            }
+
+            string roleText = $"<color={Helper.RoleColors[role]}>{Instance.Localization.Shared.RoleNames[role]}</color>";
+            // "<size=30>You currently appear to others as a {0}.<br>Time left: {1} seconds<br>{2}</size>";
+            int eta = (int)(_hologramTask.GetETA() ?? 0);
+            return string.Format(Translation.ActiveText, roleText, eta, confirmationMessage);
         }
 
         public override void CleanUp()
@@ -146,32 +162,22 @@ namespace ComAbilities.Abilities
 
         public float GetDisplayETA() => cooldown.GetDisplayETA();
 
+        internal void UpdateText()
+        {
+            Exiled.API.Features.Broadcast bc = new(GetHologramBroadcastText(CompManager.AscPlayer.Role), _broadcastTime, true, Broadcast.BroadcastFlags.Normal);
+            CompManager.AscPlayer.Broadcast(bc, true);
+        }
+
         private static float GetLowestAux()
         {
             IEnumerable<float> vals = config.RoleLevels.Select((val, index) => val.Cost);
             return vals.Min();
         }
+
         private static float GetHighestAux()
         {
             IEnumerable<float> vals = config.RoleLevels.Select((val, index) => val.Cost);
             return vals.Max();
-        }
-        private string GetHologramBroadcastText(RoleTypeId role)
-        {
-            // string text = Instance.Config.Hologram.BroadcastText;
-
-            string confirmationMessage;
-            if (ConfirmationPressed)
-            {
-                confirmationMessage = HologramT.CancelMessageAfter;
-            }
-            else
-            {
-                confirmationMessage = HologramT.CancelMessageBefore;
-            }
-
-            string roleText = $"<color={Helper.RoleColors[role]}>{Instance.Localization.Shared.RoleNames[role]}</color>";
-            return string.Format(HologramT.ActiveText, roleText, (int)(_hologramTask.GetETA() ?? 0), confirmationMessage);
         }
     }
 }

@@ -38,7 +38,7 @@
             CompManager compManager = Instance.CompDict.GetOrError(ev.Player);
             compManager.UpdatePermissions();
 
-            IEnumerable<Ability> newAbilities = compManager.GetNewAbilities(ev.NewLevel);
+            IEnumerable<Ability> newAbilities = compManager.AbilityInstances.Where(x => x.ReqLevel == ev.NewLevel);
             if (newAbilities.Any())
             {
                 StringBuilder sb = new();

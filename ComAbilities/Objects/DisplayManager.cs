@@ -5,6 +5,7 @@ using ComAbilities.Types.RueTasks;
 using CommandSystem;
 using Exiled.API.Features;
 using Exiled.API.Features.Roles;
+using MEC;
 using RueI;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,12 @@ using Utf8Json.Resolvers.Internal;
 /// Handles 
 namespace ComAbilities.Objects
 {
+    public enum MessageType
+    {
+        Error,
+        Info
+    }
+
     [Flags]
     public enum Screens
     {
@@ -29,10 +36,18 @@ namespace ComAbilities.Objects
 
     public class DisplayManager
     {
+        protected internal readonly record struct Message(string text, MessageType messageType, DateTimeOffset expireAt);
+
+        private const float TIMETOSHOWMESSAGES = 4f;
+        private const int MESSAGEQUEUESIZE = 2;
+
         private CompManager compManager;
+        private CoroutineHandle messageCH;
 
         private static ComAbilities Instance => ComAbilities.Instance;
         private static CALocalization Localization => Instance.Localization;
+
+        private Queue<Message> messages = new();
 
         public ScreenPlayerDisplay<Screens> PlayerDisplay { get; }
 
@@ -56,6 +71,7 @@ namespace ComAbilities.Objects
         public Screens CurrentScreen { get => PlayerDisplay.CurrentScreen; set => PlayerDisplay.CurrentScreen = value; }
 
         public void Update() => PlayerDisplay.Update();
+
         public void Update(Screens screen) => PlayerDisplay.Update(screen);
         /// TODO: format this to use proper text thing
         /*
@@ -97,7 +113,7 @@ namespace ComAbilities.Objects
 
             //DisplayManager.SetElement(Elements.ActiveAbilities, sb.ToString());
             //DisplayManager.Update(DisplayTypes.Main);
-        }
+        }   
 
         public string Get_AvailableAbilities()
         {
@@ -137,10 +153,53 @@ namespace ComAbilities.Objects
             return sb.ToString();
         }
 
-        // TODO: do this thing lol
-        public string AddMessage(string message)
+        public string Get_Messages()
         {
-            return string.Empty;
+            StringBuilder sb = new();
+
+            foreach (Message message in messages)
+            {
+                switch(message.messageType)
+                {
+                    case MessageType.Error:
+                        sb.Append("<color=#962523>");
+                        break;
+                    case MessageType.Info:
+                        sb.Append("<color=#237696>");
+                        break;
+                }
+                sb.Append(message.text);
+                sb.Append("</color>\n");
+            }
+
+            return sb.ToString();
+        }
+
+        // TODO: do this thing lol
+        public void AddMessage(string text, MessageType type)
+        {
+            Message message = new(text, type, new DateTimeOffset().AddSeconds(TIMETOSHOWMESSAGES));
+            if (messages.First() == message) return;
+
+            if (messages.Count >= MESSAGEQUEUESIZE)
+            {
+                Message killMessage = messages.Dequeue();
+                //killMessage.
+            }
+            messages.Enqueue(message);
+
+        }
+
+        private IEnumerator<float> HandleMessage()
+        {
+            float oldestMessageExpiry = messages.Peek().expireAt.ToUnixTimeMilliseconds();
+            float timeToWait = new DateTimeOffset().ToUnixTimeMilliseconds() - oldestMessageExpiry;
+
+            yield return Timing.WaitForSeconds(timeToWait * 1000);
+
+            messages.Dequeue();
+            MessageElement.Set(Get_Messages());
+            PlayerDisplay.Update();
         }
     }
 }

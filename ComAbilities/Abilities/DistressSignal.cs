@@ -9,30 +9,31 @@ namespace ComAbilities.Abilities
     //[Hotkey]
     public sealed class DistressSignal : Ability, ICooldownAbility
     {
-        private static DistressSignalT DistressSignalT => Instance.Localization.DistressSignal;
+        private static DistressSignalT Translation => Instance.Localization.DistressSignal;
+        private static DistressSignalConfig Config => Instance.Config.DistressSignal;
 
-        private static DistressSignalConfig config => Instance.Config.DistressSignal;
         private readonly Cooldown cooldown = new();
 
         public DistressSignal(CompManager compManager) : base(compManager) { }
 
-        public override string Name => DistressSignalT.Name;
-        public override string Description => DistressSignalT.Description;
-        public override float AuxCost => config.AuxCost;
-        public override int ReqLevel => config.Level;
-        public override string DisplayText => string.Format(DistressSignalT.DisplayText, AuxCost);
-        public override bool Enabled => config.Enabled;
+        public override string Name => Translation.Name;
+        public override string Description => Translation.Description;
+        public override float AuxCost => Config.AuxCost;
+        public override int ReqLevel => Config.Level;
+        public override string DisplayText => string.Format(Translation.DisplayText, AuxCost);
+        public override bool Enabled => Config.Enabled;
 
-        public float CooldownLength => config.Cooldown;
+        public float CooldownLength => Config.Cooldown;
         public bool OnCooldown => cooldown.Active;
 
         public float GetDisplayETA() => cooldown.GetDisplayETA();
 
         public void Trigger(SpawnableTeamType team)
         {
-            Respawn.GrantTickets(team, Instance.Config.DistressSignal.Tickets);
+            Respawn.GrantTickets(team, Config.Tickets);
 
-            CompManager.DeductAux(AuxCost);
+            // TODO: set up faux aux manager system
+            if (CompManager.Role != null) CompManager.Role.Energy -= AuxCost;
             cooldown.Start(CooldownLength);
         }
 

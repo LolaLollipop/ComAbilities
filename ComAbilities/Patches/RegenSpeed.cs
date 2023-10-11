@@ -29,7 +29,7 @@ namespace ComAbilities.Patches
 
             manager.ActiveAbilities.ForEach((IReductionAbility ability) =>
             {
-                    addMultiplier *= ability.AuxModifier;
+                addMultiplier *= ability.AuxModifier;
             });
             __result *= addMultiplier;
             

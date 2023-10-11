@@ -1,5 +1,6 @@
 ﻿namespace RueI
 {
+    using System.Collections.ObjectModel;
     using System.Text;
 
     using Exiled.API.Features;
@@ -98,6 +99,17 @@
             sb.Insert(0, $"<line-height={totalOffset}px>\n");
             return sb.ToString();
         }
+
+        protected override bool ShouldParse(Element element)
+        {
+            if (!element.Enabled) return false;
+
+            if (element is IScreenElement<T> screenElement)
+            {
+                return screenElement.Screens.HasFlag(CurrentScreen);
+            }
+            return true;
+        }
     }
 
     /// <summary>
@@ -157,7 +169,6 @@
         protected static Comparison<Element> Comparer { get; } = (Element first, Element other) => other.ZIndex - first.ZIndex;
 
         protected List<Element> elements { get; } = new();
-
         /// <summary>
         /// Adds an element to the player's display.
         /// </summary>
@@ -220,7 +231,7 @@
             for (int i = 0; i < elements.Count; i++)
             {
                 Element curElement = elements[i];
-                if (!curElement.Enabled)
+                if (!ShouldParse(curElement))
                 {
                     continue;
                 }
@@ -251,6 +262,8 @@
             sb.Insert(0, $"<line-height={totalOffset}px>\n");
             return sb.ToString();
         }
+
+        protected virtual bool ShouldParse(Element element) => element.Enabled;
 
         private void OnRateLimitFinished()
         {
