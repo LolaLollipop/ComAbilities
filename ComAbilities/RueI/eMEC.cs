@@ -4,13 +4,7 @@ using MEC;
 using ComAbilities.Types.RueTasks;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics;
-/*
 
-+-+-+-+-+
-|R|u|e|I|
-+-+-+-+-+
-
-*/
 namespace eMEC
 {
     public static class MECExtensions
