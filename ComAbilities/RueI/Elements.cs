@@ -1,13 +1,9 @@
 ﻿namespace RueI
 {
-    using System.Text.RegularExpressions;
+    using RueI.Records;
+    using RueI.Delegates;
 
-    /// <summary>
-    /// Defines a record that contains information used for displaying multiple elements.
-    /// </summary>
-    /// <param name="Content">The element's content.</param>
-    /// <param name="Offset">The offset that should be applied. Equivalent to the total linebreaks within the element.</param>
-    public record struct ParsedData(string Content, float Offset);
+    using System.Text.RegularExpressions;
 
     /// <summary>
     /// Represents an element that is shown when certain screens are active.
@@ -108,12 +104,6 @@
     /// </summary>
     public class DynamicElement : Element
     {
-        /// <summary>
-        /// Defines a method used to get content for an element.
-        /// </summary>
-        /// <returns>A string with the new content.</returns>
-        public delegate string GetContent();
-
         /// <summary>
         /// Initializes a new instance of the <see cref="DynamicElement"/> class.
         /// </summary>
@@ -241,10 +231,10 @@
         public int CompareTo(Element other) => this.ZIndex - other.ZIndex;
 
         /// <summary>
-        /// Parses an element's content, providing the offset to maintain a constant position
+        /// Parses an element's content, providing the offset to maintain a constant position.
         /// </summary>
-        /// <param name="content">The content to parsed.</param>
-        /// <returns>A <see cref="ParsedData"/> containing the new content and position</returns>
+        /// <param name="content">The content to parse.</param>
+        /// <returns>A <see cref="ParsedData"/> containing the new content and position.</returns>
         protected static ParsedData Parse(string content)
         {
             bool shouldParse = true;
@@ -258,6 +248,67 @@
 
                 switch (small)
                 {
+                    case "<line" when shouldParse:
+
+                        if (!float.TryParse(match.Groups[1].ToString(), out float value))
+                        {
+                            currentHeight = PlayerDisplay.DEFAULTHEIGHT;
+                            return $"<line-height={currentHeight}px>";
+                        }
+
+                        switch (match.Groups[2].ToString())
+                        {
+                            case "%":
+                                currentHeight = (value / 100) * PlayerDisplay.DEFAULTHEIGHT;
+                                break;
+                            case "em" or "ems":
+                                currentHeight = value * PlayerDisplay.EMSTOPIXELS;
+                                break;
+                        }
+                        return $"<line-height={currentHeight}px>";
+                    case "</lin" when shouldParse:
+                        currentHeight = PlayerDisplay.DEFAULTHEIGHT;
+                        return $"<line-height={currentHeight}px>";
+                    case "</nop":
+                        shouldParse = true;
+                        break;
+                    case "<nopa":
+                        shouldParse = false;
+                        break;
+                    case "<br>" when shouldParse:
+                        newOffset += currentHeight;
+                        break;
+                    case "\n":
+                        newOffset += currentHeight;
+                        break;
+                }
+
+                return match.ToString();
+            });
+            return new ParsedData(newString, newOffset);
+        }
+
+        /// <summary>
+        /// Parses an element's content, providing the offset to maintain a constant position.
+        /// </summary>
+        /// <param name="content">The content to parse.</param>
+        /// <returns>A <see cref="ParsedData"/> containing the new content and position.</returns>
+        protected static ParsedData ParseVersionTwo(string content)
+        {
+            bool shouldParse = true;
+            float currentHeight = PlayerDisplay.DEFAULTHEIGHT; // in pixels
+            float newOffset = 0;
+
+            float currentCSpace = 0;
+            bool isMonospace = false;
+
+            content = $"<line-height={PlayerDisplay.DEFAULTHEIGHT}px>" + content;
+            string newString = ParserRegex.Replace(content, (match) =>
+            {
+                string small = match.Value.Substring(0, Math.Min(5, match.Value.Length));
+
+                switch (small)
+                {   
                     case "<line" when shouldParse:
 
                         if (!float.TryParse(match.Groups[1].ToString(), out float value))

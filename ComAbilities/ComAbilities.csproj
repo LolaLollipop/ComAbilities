@@ -4,7 +4,7 @@
 		<TargetFramework>net48</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<LangVersion>10.0</LangVersion>
+		<LangVersion>latest</LangVersion>
 		<Platforms>AnyCPU;x64</Platforms>
 	</PropertyGroup>
 

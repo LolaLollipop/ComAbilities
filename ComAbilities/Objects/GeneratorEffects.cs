@@ -48,12 +48,12 @@ namespace ComAbilities.Objects
                 if (config.DoorExplodeInterval.TryGetValue(activatedGens, out Range explodeInterval))
                 {
                     if (CH.HasValue) Timing.KillCoroutines(CH.Value);
-                    CH = Timing.RunCoroutine(DestroyDoors(explodeInterval));   
+                    CH = Timing.RunCoroutine(_DestroyDoors(explodeInterval));   
                 }
             }
         }
 
-        private IEnumerator<float> DestroyDoors(Range range)
+        private IEnumerator<float> _DestroyDoors(Range range)
         {
             var (min, max) = range;
             while (true) {
@@ -76,6 +76,7 @@ namespace ComAbilities.Objects
         {
             singleton.CleanUp();
             singleton = new();
+                
         }
     }
 }

@@ -1,10 +1,11 @@
 ﻿namespace RueI
 {
-    using System.Collections.ObjectModel;
     using System.Text;
-
+    using ComAbilities.RueI.Events;
     using Exiled.API.Features;
     using MEC;
+
+    using RueI.Records;
 
     /// <summary>
     /// Represents a <see cref="PlayerDisplay"/> that hides elements based on an active screen.
@@ -17,7 +18,7 @@
         /// Initializes a new instance of the <see cref="ScreenPlayerDisplay{T}"/> class.
         /// </summary>
         /// <param name="player">The <see cref="Player"/> to assign the display to.</param>
-        /// <param name="defaultScreen">The default <see cref="{T}"/> to use as a screen.</param>
+        /// <param name="defaultScreen">The default <see cref="T"/> to use as a screen.</param>
         public ScreenPlayerDisplay(Player player, T defaultScreen)
             : base(player)
         {
@@ -273,6 +274,9 @@
                 shouldUpdate = false;
                 Update();
             }
+
+            RateLimitFinishedEventArgs args = new(Player);
+            Events.OnRateLimitFinished(args);
         }
     }
 }

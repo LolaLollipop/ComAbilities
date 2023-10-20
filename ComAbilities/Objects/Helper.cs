@@ -31,6 +31,7 @@ namespace ComAbilities.Objects
             { RoleTypeId.Scientist, "#FFFF7C" },
             { RoleTypeId.FacilityGuard, "#5B6370" }
         };
+
         public static string? GetRoleColor(RoleTypeId role) => RoleColors.TryGetValue(role, out var color) ? color : null;
 
         public static T? GetClosest<T>(Vector3 position, IEnumerable<T> objects)

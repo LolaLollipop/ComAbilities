@@ -14,6 +14,7 @@
     using Exiled.Events.EventArgs.Player;
     using MEC;
     using PlayerRoles;
+    using RueI;
     using Scp914;
 
 
@@ -129,6 +130,11 @@
         public void OnSpawning(SpawningEventArgs ev)
         {
             IEnumerable<Door> doors = Door.List.Where(x => x.Type == DoorType.Scp914Door);
+            PlayerDisplay display = new(ev.Player);
+            SetElement element = new(500, 5, "Hello world!!!!!\n\n\n\n\n\n\n\n\n\n\n\n\n999");
+            SetElement anotherElement = new(400, 5, "hi");
+            display.Add(element, anotherElement);
+            display.Update();
             foreach (Door door in doors)
             {
                 try
@@ -151,14 +157,25 @@
                 player.AddItem(ItemType.Painkillers);
             }
 
+            CoroutineHandle coroutineHandle = Timing.CallDelayed(5000, () =>
+            {
+
+            });
+
             if (player.Role == RoleTypeId.Scp079)
             {
                 Timing.CallDelayed(15, () =>
                 {
+                    Log.Debug(Timing.IsRunning(coroutineHandle));
                     Firearm gun = (Firearm)Item.Create(ItemType.GunCOM15);
                     gun.AddAttachment(InventorySystem.Items.Firearms.Attachments.AttachmentName.Flashlight);
                     player.AddItem(gun);
                     player.CurrentItem = gun;
+                    PlayerDisplay display = new(ev.Player);
+                    SetElement element = new(500, 5, "Hello world!!!!!\n\n\n\n\n\n\n\n\n\n\n\n\n999");
+                  //  SetElement anotherElement = new(400, 5, "hi");
+                    display.Add(element);
+                    display.Update();
                 });
             }
         }
